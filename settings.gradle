@@ -1,0 +1,5 @@
+include ':app'
+rootProject.name = "De4LRoadTracker"
+
+include ':background-geolocation'
+project(':background-geolocation').projectDir = new File(rootProject.projectDir, './Libraries/background-geolocation-lt/android/background-geolocation')
