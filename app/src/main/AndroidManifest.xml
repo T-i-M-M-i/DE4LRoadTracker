@@ -20,12 +20,14 @@
             android:parentActivityName=".MainActivity"
             android:label="@string/title_activity_settings" />
         <activity android:name=".activity.MQTTActivity" />
-        <activity android:name=".MainActivity">
+        <activity android:name="io.timmi.clojureActivity.MyActivity" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity android:name=".MainActivity">
         </activity>
 
         <service android:name=".SensorRecordService" />

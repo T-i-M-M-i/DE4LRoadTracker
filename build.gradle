@@ -3,15 +3,20 @@ buildscript {
     repositories {
         google()
         jcenter()
+        maven {
+            url "https://clojars.org/repo/"
+        }
     }
     dependencies {
         classpath "com.android.tools.build:gradle:4.0.1"
 
+        classpath "io.github.gradle-clojure:gradle-clojure-plugin:0.4.0"
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }
     ext {
-        appCompatVersion = "1.1.0"    // <-- AndroidX compatibility.  set as desired.  For pre-androidX, specify `com.android.support` version.
+        appCompatVersion = "1.1.0"
+        // <-- AndroidX compatibility.  set as desired.  For pre-androidX, specify `com.android.support` version.
         googlePlayServicesLocationVersion = "17.0.0"
     }
 }
@@ -21,12 +26,13 @@ allprojects {
         google()
         jcenter()
         maven {
-           // REQUIRED background-geolocation
+            // REQUIRED background-geolocation
             url("${project(':background-geolocation').projectDir}/libs")
         }
         maven {
             url "https://repo.eclipse.org/content/repositories/paho-snapshots/"
         }
+        maven { url "https://clojars.org/repo" }
 
     }
 }
