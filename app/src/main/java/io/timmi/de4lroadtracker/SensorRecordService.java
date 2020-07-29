@@ -45,24 +45,35 @@ public class SensorRecordService extends Service implements SensorEventListener 
     @Nullable
     private Sensor accelerometer = null;
     @Nullable
-    private SensorEvent lastSensorEvent = null;
+    private Sensor light = null;
+    @Nullable
+    private SensorEvent lastLightSensorEvent = null;
+    @Nullable
+    private SensorEvent lastAccSensorEvent = null;
     @Nullable
     BackgroundGeolocation bgGeo = null;
     @Nullable
     MQTTConnection mqttConnection = null;
 
+
     private void setupSensors() {
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        light = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
         sensorManager.registerListener(this, accelerometer , SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(this, light , SensorManager.SENSOR_DELAY_NORMAL);
     }
 
     public JSONObject sensorValueToJson(SensorEvent sensorValue) {
         JSONObject  res = new JSONObject();
+        if(sensorValue == null)
+            return res;
         try {
             res.put("values", new JSONArray(sensorValue.values));
             res.put("name", sensorValue.sensor.getName());
+            res.put("type", sensorValue.sensor.getType());
             res.put("accuracy", sensorValue.accuracy);
+            res.put("timestamp", sensorValue.timestamp);
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -107,14 +118,11 @@ public class SensorRecordService extends Service implements SensorEventListener 
             @Override
             public void onLocation(TSLocation location) {
                 Log.i(TAG, "[location] " + location.toJson());
-                if(lastSensorEvent != null ) {
-                    Log.i(TAG, "[sensorEvent] " +
-                    sensorValueToJson(lastSensorEvent));
-                }
                 JSONObject publishLocMessage = new JSONObject();
                 try {
                     publishLocMessage.put("location", location.toJson());
-                    publishLocMessage.put("acceleration", sensorValueToJson(lastSensorEvent));
+                    publishLocMessage.put("acceleration", sensorValueToJson(lastAccSensorEvent));
+                    publishLocMessage.put("light", sensorValueToJson(lastLightSensorEvent));
                     mqttConnection.publishMessage(publishLocMessage.toString(2));
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -208,8 +216,18 @@ public class SensorRecordService extends Service implements SensorEventListener 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
        // Log.i(TAG, "[sensorChanged] " + sensorEvent.toString());
-        lastSensorEvent = sensorEvent;
+        switch (sensorEvent.sensor.getType()) {
+            case Sensor.TYPE_LIGHT: {
+                lastLightSensorEvent = sensorEvent;
+                break;
+            }
+            case Sensor.TYPE_ACCELEROMETER: {
+                lastAccSensorEvent = sensorEvent;
+                break;
+            }
+        }
     }
+
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int i) {

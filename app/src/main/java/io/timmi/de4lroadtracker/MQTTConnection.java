@@ -1,17 +1,12 @@
 package io.timmi.de4lroadtracker;
 
-import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
-
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.DisconnectedBufferOptions;
@@ -43,6 +38,8 @@ public class MQTTConnection  implements SharedPreferences.OnSharedPreferenceChan
         connectMqtt(appContext);
 
     }
+
+
 
     private void connectMqtt(Context _appContext) {
 
@@ -119,6 +116,7 @@ public class MQTTConnection  implements SharedPreferences.OnSharedPreferenceChan
 
     private void addToHistory(String mainText){
         System.out.println("LOG: " + mainText);
+        sendHistoryBroadcast(mainText);
 
     }
 
@@ -168,6 +166,29 @@ public class MQTTConnection  implements SharedPreferences.OnSharedPreferenceChan
         } catch (MqttException e) {
             System.err.println("Error Publishing: " + e.getMessage());
             e.printStackTrace();
+        }
+    }
+
+    /**
+     * This method is responsible to send broadcast to specific Action
+     * */
+    private void sendHistoryBroadcast(String message)
+    {
+        try
+        {
+            Intent broadCastIntent = new Intent();
+            broadCastIntent.setAction(MainActivity.HISTORY_MESSAGE_BROADCAST);
+            broadCastIntent.putExtra("historyMessage", message);
+
+            if (appContext != null) {
+                Log.i("MQTT", "[sendBroadcast]");
+                appContext.sendBroadcast(broadCastIntent);
+            }
+
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
         }
     }
 
