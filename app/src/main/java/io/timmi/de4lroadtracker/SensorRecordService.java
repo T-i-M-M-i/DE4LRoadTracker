@@ -3,7 +3,12 @@ package io.timmi.de4lroadtracker;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.IBinder;
 import android.widget.Toast;
 
@@ -21,13 +26,48 @@ import com.transistorsoft.locationmanager.adapter.callback.TSLocationCallback;
 import com.transistorsoft.locationmanager.event.HeartbeatEvent;
 import com.transistorsoft.locationmanager.location.TSLocation;
 
-public class SensorRecordService extends Service {
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class SensorRecordService extends Service implements SensorEventListener {
     private static String TAG = "DE4SensorRecordService";
     private static final int NOTIFICATION = 1;
     public static final String CLOSE_ACTION = "close";
     @Nullable
     private NotificationManager mNotificationManager = null;
     private final NotificationCompat.Builder mNotificationBuilder = new NotificationCompat.Builder(this);
+    @Nullable
+    private SensorManager sensorManager = null;
+    @Nullable
+    private Sensor accelerometer = null;
+    @Nullable
+    private SensorEvent lastSensorEvent = null;
+    @Nullable
+    BackgroundGeolocation bgGeo = null;
+    @Nullable
+    MQTTConnection mqttConnection = null;
+
+    private void setupSensors() {
+        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        sensorManager.registerListener(this, accelerometer , SensorManager.SENSOR_DELAY_NORMAL);
+    }
+
+    public JSONObject sensorValueToJson(SensorEvent sensorValue) {
+        JSONObject  res = new JSONObject();
+        try {
+            res.put("values", new JSONArray(sensorValue.values));
+            res.put("name", sensorValue.sensor.getName());
+            res.put("accuracy", sensorValue.accuracy);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return res;
+    }
 
     @Nullable
     @Override
@@ -36,12 +76,16 @@ public class SensorRecordService extends Service {
     }
     public void onCreate() {
         super.onCreate();
-        setupNotifications();
-        showNotification();
         Toast.makeText(getBaseContext(), "onCreate", Toast.LENGTH_SHORT).show();
 
+        setupNotifications();
+        showNotification();
+        setupSensors();
+
+        mqttConnection = new MQTTConnection(this, getApplicationContext());
+
         // Get a reference to the SDK
-        final BackgroundGeolocation bgGeo = BackgroundGeolocation.getInstance(getApplicationContext());
+        bgGeo = BackgroundGeolocation.getInstance(getApplicationContext());
         final TSConfig config = TSConfig.getInstance(getApplicationContext());
 
         // Configure the SDK
@@ -63,6 +107,18 @@ public class SensorRecordService extends Service {
             @Override
             public void onLocation(TSLocation location) {
                 Log.i(TAG, "[location] " + location.toJson());
+                if(lastSensorEvent != null ) {
+                    Log.i(TAG, "[sensorEvent] " +
+                    sensorValueToJson(lastSensorEvent));
+                }
+                JSONObject publishLocMessage = new JSONObject();
+                try {
+                    publishLocMessage.put("location", location.toJson());
+                    publishLocMessage.put("acceleration", sensorValueToJson(lastSensorEvent));
+                    mqttConnection.publishMessage(publishLocMessage.toString(2));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
             }
             @Override
             public void onError(Integer code) {
@@ -107,7 +163,12 @@ public class SensorRecordService extends Service {
     public void onDestroy() {
         super.onDestroy();
         Toast.makeText(getBaseContext(),"onDestroy", Toast.LENGTH_LONG).show();
-        mNotificationManager.cancel(NOTIFICATION);
+        if (mNotificationManager != null) {
+            mNotificationManager.cancel(NOTIFICATION);
+        }
+        if (bgGeo != null) {
+            bgGeo.stop();
+        }
     }
 
     private void setupNotifications() { //called in onCreate()
@@ -144,4 +205,15 @@ public class SensorRecordService extends Service {
         }
     }
 
+    @Override
+    public void onSensorChanged(SensorEvent sensorEvent) {
+       // Log.i(TAG, "[sensorChanged] " + sensorEvent.toString());
+        lastSensorEvent = sensorEvent;
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int i) {
+        //Log.i(TAG, "[accuracyChanged] " + sensor.getName() + " " + i);
+
+    }
 }

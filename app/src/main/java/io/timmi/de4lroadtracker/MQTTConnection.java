@@ -1,6 +1,7 @@
-package io.timmi.de4lroadtracker.activity;
+package io.timmi.de4lroadtracker;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -8,8 +9,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
-import io.timmi.de4lroadtracker.R;
-import io.timmi.de4lroadtracker.SettingsActivity;
+import androidx.annotation.Nullable;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -24,23 +24,27 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
-public class MQTTActivity extends Activity implements SharedPreferences.OnSharedPreferenceChangeListener {
+public class MQTTConnection  implements SharedPreferences.OnSharedPreferenceChangeListener {
 
     private SharedPreferences settings;
     MqttAndroidClient mqttAndroidClient;
+    @Nullable
+    private Context appContext = null;
 
 
     String clientId = "ExampleAndroidClient";
     final String subscriptionTopic = "moo";
     final String publishTopic = "test";
-    final String publishMessage = "Hello World!";
 
-    public MQTTActivity() {
-        super();
+    public MQTTConnection(Context context, Context appContext) {
+        settings = PreferenceManager.getDefaultSharedPreferences(context);
+        settings.registerOnSharedPreferenceChangeListener(this);
+
+        connectMqtt(appContext);
 
     }
 
-    private void connectMqtt() {
+    private void connectMqtt(Context _appContext) {
 
         final String serverUri = settings.getString("mqttUrl", "");
 
@@ -49,7 +53,8 @@ public class MQTTActivity extends Activity implements SharedPreferences.OnShared
             mqttAndroidClient.close();
         }
 
-        mqttAndroidClient = new MqttAndroidClient(getApplicationContext(), serverUri, clientId);
+        appContext = _appContext;
+        mqttAndroidClient = new MqttAndroidClient(appContext, serverUri, clientId);
         mqttAndroidClient.setCallback(new MqttCallbackExtended() {
             @Override
             public void connectComplete(boolean reconnect, String serverURI) {
@@ -111,45 +116,10 @@ public class MQTTActivity extends Activity implements SharedPreferences.OnShared
     }
 
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_scrolling);
-        settings = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-        settings.registerOnSharedPreferenceChangeListener(this);
-
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                publishMessage();
-            }
-        });
-        connectMqtt();
-    }
 
     private void addToHistory(String mainText){
         System.out.println("LOG: " + mainText);
 
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-
-        return super.onOptionsItemSelected(item);
     }
 
     public void subscribeToTopic(){
@@ -181,7 +151,7 @@ public class MQTTActivity extends Activity implements SharedPreferences.OnShared
         }
     }
 
-    public void publishMessage(){
+    public void publishMessage(String publishMessage){
 
         if(mqttAndroidClient == null || !mqttAndroidClient.isConnected()) {
             System.err.println("no mqtt client available!");
@@ -203,6 +173,13 @@ public class MQTTActivity extends Activity implements SharedPreferences.OnShared
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
-
+        switch (s) {
+            case "mqttUrl":
+                if(appContext != null) {
+                    connectMqtt(appContext);
+                }
+                break;
+            default:
+        }
     }
 }

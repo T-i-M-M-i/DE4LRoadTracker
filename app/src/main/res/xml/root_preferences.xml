@@ -5,13 +5,13 @@
         <EditTextPreference
             app:key="mqttUrl"
             app:title="@string/mqtt_url"
-            app:defaultValue="172.16.111.22:1883"
+            app:defaultValue="tcp://172.22.99.134:1883"
             app:useSimpleSummaryProvider="true" />
 
         <EditTextPreference
             app:key="locationServiceUrl"
             app:title="@string/location_service_url"
-            app:defaultValue="172.16.111.22:9001/location"
+            app:defaultValue="http://172.22.99.134:9001/location"
             app:useSimpleSummaryProvider="true" />
 
     </PreferenceCategory>
