@@ -2,4 +2,19 @@
     <string name="app_name">De4LRoadTracker</string>
     <string name="action_exit">stop</string>
     <string name="service_connected">Sensor Tracker running</string>
+    <string name="menu_settings">Settings</string>
+    <string name="title_activity_settings">SettingsActivity</string>
+
+    <!-- Preference Titles -->
+    <string name="messages_header">Message Broker</string>
+    <string name="sync_header">Sync</string>
+
+    <!-- Messages Broker Preferences -->
+    <string name="mqtt_url">MQTT Server</string>
+    <string name="mqtt_topic">MQTT Sensor Topic</string>
+    <string name="location_service_url">Location Server</string>
+
+    <!-- Sync Preferences -->
+    <string name="sync_title">Sync tracked data periodically</string>
+    <string name="power_save">enable power save settings</string>
 </resources>

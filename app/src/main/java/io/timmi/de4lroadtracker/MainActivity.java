@@ -2,6 +2,8 @@ package io.timmi.de4lroadtracker;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -16,6 +18,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+    }
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.activity_main, menu);
+        return true;
     }
 
     public void startService(View view) {
@@ -47,4 +54,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public void showSettings(MenuItem item) {
+        startActivityForResult(new Intent(this, SettingsActivity.class), 0);
+    }
 }

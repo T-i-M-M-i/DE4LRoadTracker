@@ -10,8 +10,10 @@
         android:id="@+id/fab"
         android:layout_width="53dp"
         android:layout_height="55dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="18dp"
         android:clickable="true"
-        app:srcCompat="@android:drawable/ic_menu_add"
-        tools:layout_editor_absoluteX="342dp"
-        tools:layout_editor_absoluteY="660dp" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:srcCompat="@android:drawable/ic_menu_add" />
 </androidx.constraintlayout.widget.ConstraintLayout>
