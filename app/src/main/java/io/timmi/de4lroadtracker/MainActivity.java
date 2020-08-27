@@ -1,55 +1,28 @@
 package io.timmi.de4lroadtracker;
 
 import android.app.ActivityManager;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
-import androidx.annotation.DrawableRes;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.MutableLiveData;
-import androidx.recyclerview.widget.RecyclerView;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import io.timmi.de4lroadtracker.activity.MQTTActivity;
+import io.timmi.de4lroadtracker.activity.DebugActivity;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "DE4LMainActivity";
     public static final String HISTORY_MESSAGE_BROADCAST = "io.timmi.de4lroadtracker.historymessagebroadcast";
     public static final String BUFFER_STATUS_BROADCAST = "io.timmi.de4lroadtracker.bufferstatusbroadcast";
 
-    private HistoryRecyclerAdapter historyRecyclerAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        ArrayList<String> preList = new ArrayList<>();
-        preList.add("first element");
-        historyRecyclerAdapter = new HistoryRecyclerAdapter(preList);
-        RecyclerView rView = (RecyclerView) MainActivity.this.findViewById(R.id.mqttHistory);
-        rView.setAdapter(historyRecyclerAdapter);
-        registerBroadcastReceiver(HISTORY_MESSAGE_BROADCAST, new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                String historyMessage = intent.getStringExtra("historyMessage");
-                if (historyMessage == null) {
-                    return;
-                }
-                Log.i(TAG, "[messageBroadcastReceiver.onReceive]");
-                historyRecyclerAdapter.add(historyMessage);
-                //RecyclerView rView = (RecyclerView) MainActivity.this.findViewById(R.id.mqttHistory);
-            }
-        });
     }
 
     @Override
@@ -85,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void startMqttTestActivity(View view) {
-        Intent intent  = new Intent(getBaseContext(), MQTTActivity.class);
+        Intent intent  = new Intent(getBaseContext(), DebugActivity.class);
         startActivity(intent);
     }
 
@@ -119,17 +92,5 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void registerBroadcastReceiver(String broadcastMessageId, BroadcastReceiver receiver) {
-        try
-        {
-            IntentFilter intentFilter = new IntentFilter();
-            intentFilter.addAction(broadcastMessageId);
-            registerReceiver(receiver, intentFilter);
-        }
-        catch (Exception ex)
-        {
-            ex.printStackTrace();
-        }
-    }
 
 }

@@ -31,8 +31,8 @@ public class MQTTActivity extends Activity implements SharedPreferences.OnShared
 
 
     String clientId = "ExampleAndroidClient";
-    final String subscriptionTopic = "moo";
-    final String publishTopic = "test";
+    final String subscriptionTopic = "sensors/timmi/moo";
+    final String publishTopic = "sensors/timmi/test";
     final String publishMessage = "Hello World!";
 
     public MQTTActivity() {

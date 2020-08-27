@@ -1,11 +1,12 @@
-<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <PreferenceCategory app:title="@string/messages_header">
 
         <EditTextPreference
             app:key="mqttUrl"
             app:title="@string/mqtt_url"
-            app:defaultValue="tcp://172.22.99.134:1883"
+            app:defaultValue="mqtts://mqtt.de4l.io:8883"
             app:useSimpleSummaryProvider="true" />
 
         <EditTextPreference
@@ -13,6 +14,21 @@
             app:title="@string/location_service_url"
             app:defaultValue="http://172.22.99.134:9001/location"
             app:useSimpleSummaryProvider="true" />
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="mqttUsername"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            app:defaultValue="timmi"
+            android:title="Username" />
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="mqttPW"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            app:defaultValue="NQeVfKtHrEnaNNOboF5Z"
+            android:inputType="textPassword"
+            android:title="Password" />
 
     </PreferenceCategory>
 

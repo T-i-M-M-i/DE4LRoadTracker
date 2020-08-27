@@ -10,12 +10,11 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.IBinder;
+import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
-
-import android.util.Log;
 
 import com.google.android.gms.location.LocationRequest;
 import com.transistorsoft.locationmanager.adapter.BackgroundGeolocation;
@@ -29,9 +28,6 @@ import com.transistorsoft.locationmanager.location.TSLocation;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class SensorRecordService extends Service implements SensorEventListener {
     private static String TAG = "DE4SensorRecordService";
@@ -87,7 +83,7 @@ public class SensorRecordService extends Service implements SensorEventListener 
     }
     public void onCreate() {
         super.onCreate();
-        Toast.makeText(getBaseContext(), "onCreate", Toast.LENGTH_SHORT).show();
+        Toast.makeText(getBaseContext(), "tracking service started", Toast.LENGTH_SHORT).show();
 
         setupNotifications();
         showNotification();
@@ -170,7 +166,7 @@ public class SensorRecordService extends Service implements SensorEventListener 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Toast.makeText(getBaseContext(),"onDestroy", Toast.LENGTH_LONG).show();
+        Toast.makeText(getBaseContext(),"tracking service stopped", Toast.LENGTH_LONG).show();
         if (mNotificationManager != null) {
             mNotificationManager.cancel(NOTIFICATION);
         }

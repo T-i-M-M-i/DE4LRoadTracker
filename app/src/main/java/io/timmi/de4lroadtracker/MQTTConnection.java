@@ -28,8 +28,8 @@ public class MQTTConnection  implements SharedPreferences.OnSharedPreferenceChan
 
 
     String clientId = "ExampleAndroidClient";
-    final String subscriptionTopic = "moo";
-    final String publishTopic = "test";
+    final String subscriptionTopic = "sensors/timmi/moo";
+    final String publishTopic = "sensors/timmi/test";
 
     public MQTTConnection(Context context, Context appContext) {
         settings = PreferenceManager.getDefaultSharedPreferences(context);
@@ -84,6 +84,15 @@ public class MQTTConnection  implements SharedPreferences.OnSharedPreferenceChan
         MqttConnectOptions mqttConnectOptions = new MqttConnectOptions();
         mqttConnectOptions.setAutomaticReconnect(true);
         mqttConnectOptions.setCleanSession(false);
+
+        String password = settings.getString("mqttPW", "");
+        String username = settings.getString("mqttUsername", "");
+        if(username != null && !username.isEmpty()) {
+            mqttConnectOptions.setUserName(username);
+        }
+        if(password != null && !password.isEmpty()) {
+            mqttConnectOptions.setPassword(password.toCharArray());
+        }
 
         try {
             //addToHistory("Connecting to " + serverUri);

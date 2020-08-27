@@ -13,12 +13,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:onClick="startMqttTestActivity"
-        android:text="mqtt" />
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/mqttHistory"
-        android:layout_width="match_parent"
-        android:layout_height="413dp"
-        android:background="#2196F3" />
+        android:text="mqtt test" />
 
 </LinearLayout>
