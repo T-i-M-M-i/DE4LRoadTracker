@@ -6,7 +6,7 @@
         <EditTextPreference
             app:key="mqttUrl"
             app:title="@string/mqtt_url"
-            app:defaultValue="mqtts://mqtt.de4l.io:8883"
+            app:defaultValue="ssl://mqtt.de4l.io:8883"
             app:useSimpleSummaryProvider="true" />
 
         <EditTextPreference

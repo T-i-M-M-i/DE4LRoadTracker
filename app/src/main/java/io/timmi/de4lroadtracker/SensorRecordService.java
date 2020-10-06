@@ -1,5 +1,6 @@
 package io.timmi.de4lroadtracker;
 
+import android.annotation.SuppressLint;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -9,7 +10,10 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.Build;
 import android.os.IBinder;
+import android.provider.Settings;
+import android.provider.Settings.Secure;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -29,6 +33,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Queue;
+import java.util.concurrent.LinkedBlockingQueue;
+
 public class SensorRecordService extends Service implements SensorEventListener {
     private static String TAG = "DE4SensorRecordService";
     private static final int NOTIFICATION = 1;
@@ -47,10 +54,35 @@ public class SensorRecordService extends Service implements SensorEventListener 
     @Nullable
     private SensorEvent lastAccSensorEvent = null;
     @Nullable
-    BackgroundGeolocation bgGeo = null;
+    private BackgroundGeolocation bgGeo = null;
     @Nullable
-    MQTTConnection mqttConnection = null;
+    private MQTTConnection mqttConnection = null;
+    private JSONObject deviceInfo = getDeviceJSON();
 
+    /**
+     * How many sensor events to store in the Queue, before dropping
+     */
+    private final int maxQueueSize = 10000;
+    private final Queue<SensorEvent> lightSensorQueue = new LinkedBlockingQueue<SensorEvent>();
+    private final Queue<SensorEvent> accSensorQueue = new LinkedBlockingQueue<SensorEvent>();
+
+
+
+    @SuppressLint("HardwareIds")
+    private JSONObject getDeviceJSON() {
+        JSONObject deviceInfo = new JSONObject();
+        try {
+            deviceInfo.put("android_id",
+                    Secure.getString(getApplicationContext().getContentResolver(), Secure.ANDROID_ID));
+            deviceInfo.put("manufacturer", Build.MANUFACTURER);
+            deviceInfo.put("model", Build.MODEL);
+            deviceInfo.put("device", Build.DEVICE);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return deviceInfo;
+
+    }
 
     private void setupSensors() {
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -97,7 +129,7 @@ public class SensorRecordService extends Service implements SensorEventListener 
 
         // Configure the SDK
         config.updateWithBuilder()
-                .setDebug(true) // Sound Fx / notifications during development
+                .setDebug(false) // Sound Fx / notifications during development
                 .setLogLevel(5) // Verbose logging during development
                 .setDesiredAccuracy(LocationRequest.PRIORITY_HIGH_ACCURACY)
                 .setDistanceFilter(10F)
@@ -106,7 +138,6 @@ public class SensorRecordService extends Service implements SensorEventListener 
                 .setStopOnTerminate(false)
                 .setForegroundService(true)
                 .setStartOnBoot(true)
-                .setUrl("http://172.22.99.134:9000/locations")
                 .commit();
 
         // Listen events
@@ -114,11 +145,17 @@ public class SensorRecordService extends Service implements SensorEventListener 
             @Override
             public void onLocation(TSLocation location) {
                 Log.i(TAG, "[location] " + location.toJson());
+                JSONObject geoPoint = new JSONObject();
                 JSONObject publishLocMessage = new JSONObject();
                 try {
+                    geoPoint.put("lat", location.getLocation().getLatitude());
+                    geoPoint.put("long", location.getLocation().getLongitude());
+
+                    publishLocMessage.put("deviceInfo", deviceInfo);
                     publishLocMessage.put("location", location.toJson());
                     publishLocMessage.put("acceleration", sensorValueToJson(lastAccSensorEvent));
                     publishLocMessage.put("light", sensorValueToJson(lastLightSensorEvent));
+                    publishLocMessage.put("geoPoint", geoPoint);
                     mqttConnection.publishMessage(publishLocMessage.toString(2));
                 } catch (JSONException e) {
                     e.printStackTrace();

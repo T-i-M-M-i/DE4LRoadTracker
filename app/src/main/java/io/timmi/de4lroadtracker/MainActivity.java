@@ -57,11 +57,6 @@ public class MainActivity extends AppCompatActivity {
         stopService(new Intent(getBaseContext(), SensorRecordService.class));
     }
 
-    public void startMqttTestActivity(View view) {
-        Intent intent  = new Intent(getBaseContext(), DebugActivity.class);
-        startActivity(intent);
-    }
-
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
@@ -93,4 +88,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    public void startMqttTestActivity(MenuItem item) {
+        Intent intent  = new Intent(getBaseContext(), DebugActivity.class);
+        startActivity(intent);
+    }
 }
