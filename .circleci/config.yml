@@ -1,0 +1,44 @@
+version: 2
+
+reference:
+  store_artifacts: &store_artifacts
+    store_artifacts: # for display in Artifacts: https://circleci.com/docs/2.0/artifacts/
+      path: /tmp/artifacts
+      destination: artifacts
+  publish_github_release: &publish_github_release
+    run:
+      name: Publish GitHub release
+      command: |
+        go get github.com/tcnksm/ghr
+        ghr -delete -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -n "DE4LRoadTracker $(.circleci/get_version)" -b
+jobs:
+  build:
+    working_directory: ~/code
+    docker:
+      - image: circleci/android:api-29-node
+        auth:
+          username: bastilion
+          password: $DOCKERHUB_PASSWORD
+    environment:
+      # See https://github.com/opendatakit/collect/blob/master/.circleci/config.yml#L86-L92 for -Xm[sx]
+      # Disable pre-dexing because we don't need incremental builds here and it just slows the process down.
+      GRADLE_OPTS: '-Dorg.gradle.jvmargs="-Xms128m -Xmx1024m -XX:+HeapDumpOnOutOfMemoryError" -DpreDexEnable=false'
+    steps:
+      - checkout
+      - restore_cache:
+          key: jars-{{ checksum "build.gradle" }}-{{ checksum  "app/build.gradle" }}
+      - run:
+          name: Download Dependencies
+          command: ./gradlew androidDependencies
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: jars-{{ checksum "build.gradle" }}-{{ checksum  "app/build.gradle" }}
+      - run:
+          name: Build debug APK
+          command: |
+            ./gradlew -PversionNumber=$(.circleci/get_version) assembleDebug
+            mkdir -p /tmp/artifacts
+            cp app/build/outputs/apk/debug/app-debug.apk /tmp/artifacts/DE4LRoadTracker-$(.circleci/get_version).apk
+      - *store_artifacts
+      - *publish_github_release
