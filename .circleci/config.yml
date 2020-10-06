@@ -1,5 +1,30 @@
 version: 2
 
+
+anchors:
+  jobs:
+    job-github-release: &base_ghr
+      docker:
+        - image: circleci/golang:1.13.0
+      steps:
+        - &g_step1
+          run:
+            name: "Download Artifacts & Dependences"
+            command: |
+              mkdir artifacts
+              sudo apt install rename
+              export USERNAME=$CIRCLE_PROJECT_USERNAME
+              export BUILD_NUMBER=$CIRCLE_PREVIOUS_BUILD_NUM
+              export PROJECT=$CIRCLE_PROJECT_REPONAME
+              curl https://circleci.com/api/v1.1/project/github/$USERNAME/$PROJECT/$BUILD_NUMBER/artifacts?circle-token=$CIRCLE_TOKEN | grep -o 'https://[^"]*' | sed -e "s/$/?circle-token=$CIRCLE_TOKEN/" | wget -P artifacts/ -v -i -
+              rename 's/.circle-token=\Q$ENV{CIRCLE_TOKEN}\E//' artifacts/*
+        - &g_step2
+          run:
+            name: "Preparing GitHub Release"
+            command: |
+              go get -u github.com/tcnksm/ghr
+              echo "export APP_VERSION=$CIRCLE_TAG" >> $BASH_ENV
+              echo "export APP_BUIL_NUMBER=$CIRCLE_PREVIOUS_BUILD_NUM" >> $BASH_ENV
 reference:
   store_artifacts: &store_artifacts
     store_artifacts: # for display in Artifacts: https://circleci.com/docs/2.0/artifacts/
@@ -42,3 +67,24 @@ jobs:
             cp app/build/outputs/apk/debug/app-debug.apk /tmp/artifacts/DE4LRoadTracker-$(.circleci/get_version).apk
       - *store_artifacts
       - *publish_github_release
+  github-release:
+    <<: *base_ghr
+    steps+:
+      - &run
+          run:
+            name: "Publish Pre-Release on GitHub"
+            command: |
+              ghr -delete -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -n "DE4LRoadTracker $(.circleci/get_version)" -b
+    steps:
+      [*g_step1,*g_step2,*run]
+
+workflows:
+  version: 2
+  android-debug-build:
+    jobs:
+      - build
+      - github-release:
+          requires:
+            - build
+
+
