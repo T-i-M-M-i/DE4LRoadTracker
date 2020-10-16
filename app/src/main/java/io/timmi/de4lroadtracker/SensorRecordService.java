@@ -57,7 +57,8 @@ public class SensorRecordService extends Service implements SensorEventListener 
     private BackgroundGeolocation bgGeo = null;
     @Nullable
     private MQTTConnection mqttConnection = null;
-    private JSONObject deviceInfo = getDeviceJSON();
+    @Nullable
+    private JSONObject deviceInfo = getDeviceJSON(null);
 
     /**
      * How many sensor events to store in the Queue, before dropping
@@ -69,18 +70,20 @@ public class SensorRecordService extends Service implements SensorEventListener 
 
 
     @SuppressLint("HardwareIds")
-    private JSONObject getDeviceJSON() {
-        JSONObject deviceInfo = new JSONObject();
+    private JSONObject getDeviceJSON(Context _ctx) {
+        JSONObject _deviceInfo = new JSONObject();
         try {
-            deviceInfo.put("android_id",
-                    Secure.getString(getApplicationContext().getContentResolver(), Secure.ANDROID_ID));
-            deviceInfo.put("manufacturer", Build.MANUFACTURER);
-            deviceInfo.put("model", Build.MODEL);
-            deviceInfo.put("device", Build.DEVICE);
+            _deviceInfo.put("android_id",
+                    _ctx == null
+                            ? "not yet available"
+                            : Secure.getString(_ctx.getContentResolver(), Secure.ANDROID_ID));
+            _deviceInfo.put("manufacturer", Build.MANUFACTURER);
+            _deviceInfo.put("model", Build.MODEL);
+            _deviceInfo.put("device", Build.DEVICE);
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        return deviceInfo;
+        return _deviceInfo;
 
     }
 
@@ -90,6 +93,14 @@ public class SensorRecordService extends Service implements SensorEventListener 
         light = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
         sensorManager.registerListener(this, accelerometer , SensorManager.SENSOR_DELAY_NORMAL);
         sensorManager.registerListener(this, light , SensorManager.SENSOR_DELAY_NORMAL);
+    }
+
+    private void aggregateSensorData(Queue<SensorEvent> sensorValues) {
+
+        while (!sensorValues.isEmpty()) {
+            SensorEvent val = sensorValues.remove();
+
+        }
     }
 
     public JSONObject sensorValueToJson(SensorEvent sensorValue) {
@@ -116,6 +127,8 @@ public class SensorRecordService extends Service implements SensorEventListener 
     public void onCreate() {
         super.onCreate();
         Toast.makeText(getBaseContext(), "tracking service started", Toast.LENGTH_SHORT).show();
+
+        deviceInfo = getDeviceJSON(getApplicationContext());
 
         setupNotifications();
         showNotification();
@@ -151,7 +164,8 @@ public class SensorRecordService extends Service implements SensorEventListener 
                     geoPoint.put("lat", location.getLocation().getLatitude());
                     geoPoint.put("long", location.getLocation().getLongitude());
 
-                    publishLocMessage.put("deviceInfo", deviceInfo);
+                        publishLocMessage.put("deviceInfo", deviceInfo);
+
                     publishLocMessage.put("location", location.toJson());
                     publishLocMessage.put("acceleration", sensorValueToJson(lastAccSensorEvent));
                     publishLocMessage.put("light", sensorValueToJson(lastLightSensorEvent));
