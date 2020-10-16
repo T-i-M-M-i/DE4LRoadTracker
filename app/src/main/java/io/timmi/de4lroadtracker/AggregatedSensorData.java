@@ -99,6 +99,7 @@ public class AggregatedSensorData {
                 float val = measurement.values[i];
                 // if minimal is not set, it will be -1
                 float defaultMin = -1.0f;
+                float defaultMax = -1.0f;
                 setFill(i, sv.numVals,
                         getOrElse(i, sv.numVals, 0) + 1,
                         0);
@@ -108,19 +109,13 @@ public class AggregatedSensorData {
                 setFill(i, sv.summedAccuracy,
                         getOrElse(i, sv.summedAccuracy, 0) + measurement.accuracy,
                         0);
-                if (val > getOrElse(i, sv.maxVals, .0f))
-                    setFill(i, sv.maxVals, val, .0f);
+                float max = getOrElse(i, sv.maxVals, defaultMax);
+                if (val > max || max == defaultMax)
+                    setFill(i, sv.maxVals, val, defaultMax);
                 float min = getOrElse(i, sv.minVals, defaultMin);
                 if (val < min || min == defaultMin)
                     setFill(i, sv.minVals, val, defaultMin);
 
-                float ts = measurement.timestamp;
-                if (sv.firstTimestamp == null || sv.firstTimestamp > ts) {
-                    sv.firstTimestamp = ts;
-                }
-                if (sv.lastTimestamp == null || sv.lastTimestamp < ts) {
-                    sv.lastTimestamp = ts;
-                }
 
             }
             for (int i = 0; i < sv.numVals.size(); i++) {
@@ -131,6 +126,14 @@ public class AggregatedSensorData {
                 setFill(i, sv.avgAccuracy,
                         ((float) sv.summedAccuracy.get(i)) / countVal,
                         .0f);
+            }
+
+            float ts = measurement.timestamp;
+            if (sv.firstTimestamp == null || sv.firstTimestamp > ts) {
+                sv.firstTimestamp = ts;
+            }
+            if (sv.lastTimestamp == null || sv.lastTimestamp < ts) {
+                sv.lastTimestamp = ts;
             }
         }
     }
