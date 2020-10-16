@@ -139,7 +139,7 @@ public class SensorRecordService extends Service implements SensorEventListener 
 
         // Configure the SDK
         config.updateWithBuilder()
-                .setDebug(false) // Sound Fx / notifications during development
+                .setDebug(true) // Sound Fx / notifications during development
                 .setLogLevel(5) // Verbose logging during development
                 .setDesiredAccuracy(LocationRequest.PRIORITY_HIGH_ACCURACY)
                 .setDistanceFilter(10F)
@@ -150,13 +150,13 @@ public class SensorRecordService extends Service implements SensorEventListener 
                 .setStartOnBoot(true)
                 .commit();
 
-        final JSONArray allSensorsData  = new AggregatedSensorData(sensorEventQueue).getJSON();
-
         // Listen events
         bgGeo.onLocation(new TSLocationCallback() {
             @Override
             public void onLocation(TSLocation location) {
                 Log.i(TAG, "[location] " + location.toJson());
+                Log.i(TAG, "[sensorEventQueue] size: " + sensorEventQueue.size());
+                final JSONArray allSensorsData  = new AggregatedSensorData(sensorEventQueue).getJSON();
                 JSONObject geoPoint = new JSONObject();
                 JSONObject publishLocMessage = new JSONObject();
                 try {
@@ -205,7 +205,13 @@ public class SensorRecordService extends Service implements SensorEventListener 
                 Log.i(TAG, "[ready] success");
                 if (!config.getEnabled()) {
                     // Start tracking immediately (if not already).
+                } else {
+                    Log.d(TAG, "[ready] location services config tells it's already enabled, nevertheless we'll start the service again.");
+                }
+                try {
                     bgGeo.start();
+                } catch (Exception e) {
+                    Log.e(TAG, "cannot start background location tracker" + e.getMessage(), e);
                 }
             }
             @Override public void onFailure(String error) {
@@ -222,7 +228,14 @@ public class SensorRecordService extends Service implements SensorEventListener 
             mNotificationManager.cancel(NOTIFICATION);
         }
         if (bgGeo != null) {
+            Log.d(TAG, "Will stop the location service");
             bgGeo.stop();
+            try {
+                bgGeo.stopBackgroundTask(1);
+            } catch (Exception e) {
+                Log.e(TAG, "Cannot stop background service " + e.getMessage(), e);
+            }
+            //bgGeo.getCount()
         }
     }
 
