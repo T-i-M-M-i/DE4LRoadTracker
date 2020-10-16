@@ -33,6 +33,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -59,7 +63,7 @@ public class SensorRecordService extends Service implements SensorEventListener 
     private MQTTConnection mqttConnection = null;
     @Nullable
     private JSONObject deviceInfo = getDeviceJSON(null);
-
+    private Queue<SensorEvent> sensorEventQueue = new LinkedList<>();
     /**
      * How many sensor events to store in the Queue, before dropping
      */
@@ -95,13 +99,6 @@ public class SensorRecordService extends Service implements SensorEventListener 
         sensorManager.registerListener(this, light , SensorManager.SENSOR_DELAY_NORMAL);
     }
 
-    private void aggregateSensorData(Queue<SensorEvent> sensorValues) {
-
-        while (!sensorValues.isEmpty()) {
-            SensorEvent val = sensorValues.remove();
-
-        }
-    }
 
     public JSONObject sensorValueToJson(SensorEvent sensorValue) {
         JSONObject  res = new JSONObject();
@@ -153,6 +150,8 @@ public class SensorRecordService extends Service implements SensorEventListener 
                 .setStartOnBoot(true)
                 .commit();
 
+        final JSONArray allSensorsData  = new AggregatedSensorData(sensorEventQueue).getJSON();
+
         // Listen events
         bgGeo.onLocation(new TSLocationCallback() {
             @Override
@@ -167,8 +166,9 @@ public class SensorRecordService extends Service implements SensorEventListener 
                         publishLocMessage.put("deviceInfo", deviceInfo);
 
                     publishLocMessage.put("location", location.toJson());
-                    publishLocMessage.put("acceleration", sensorValueToJson(lastAccSensorEvent));
-                    publishLocMessage.put("light", sensorValueToJson(lastLightSensorEvent));
+                    publishLocMessage.put("data", allSensorsData);
+                    //publishLocMessage.put("acceleration", sensorValueToJson(lastAccSensorEvent));
+                    //publishLocMessage.put("light", sensorValueToJson(lastLightSensorEvent));
                     publishLocMessage.put("geoPoint", geoPoint);
                     mqttConnection.publishMessage(publishLocMessage.toString(2));
                 } catch (JSONException e) {
@@ -266,10 +266,12 @@ public class SensorRecordService extends Service implements SensorEventListener 
         switch (sensorEvent.sensor.getType()) {
             case Sensor.TYPE_LIGHT: {
                 lastLightSensorEvent = sensorEvent;
+                sensorEventQueue.add(sensorEvent);
                 break;
             }
             case Sensor.TYPE_ACCELEROMETER: {
                 lastAccSensorEvent = sensorEvent;
+                sensorEventQueue.add(sensorEvent);
                 break;
             }
         }
