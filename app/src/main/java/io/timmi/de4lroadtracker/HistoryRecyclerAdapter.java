@@ -25,7 +25,6 @@ public class HistoryRecyclerAdapter extends RecyclerView.Adapter<HistoryRecycler
         notifyDataSetChanged();
     }
 
-
     @NonNull
     @Override
     public HistoryRecyclerAdapter.ItemViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
