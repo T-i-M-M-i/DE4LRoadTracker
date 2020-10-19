@@ -135,10 +135,10 @@ public class SensorRecordService extends Service implements SensorEventListener 
 
         // Get a reference to the SDK
         bgGeo = BackgroundGeolocation.getInstance(getApplicationContext());
-        final TSConfig config = TSConfig.getInstance(getApplicationContext());
+        //final TSConfig config = TSConfig.getInstance(getApplicationContext());
 
         // Configure the SDK
-        config.updateWithBuilder()
+        /*config.updateWithBuilder()
                 .setDebug(true) // Sound Fx / notifications during development
                 .setLogLevel(5) // Verbose logging during development
                 .setDesiredAccuracy(LocationRequest.PRIORITY_HIGH_ACCURACY)
@@ -149,12 +149,12 @@ public class SensorRecordService extends Service implements SensorEventListener 
                 .setForegroundService(true)
                 .setStartOnBoot(true)
                 .commit();
-
+*/
         // Listen events
         bgGeo.onLocation(new TSLocationCallback() {
             @Override
             public void onLocation(TSLocation location) {
-                Log.i(TAG, "[location] " + location.toJson());
+                Log.i(TAG, "[location] from service" + location.toJson());
                 Log.i(TAG, "[sensorEventQueue] size: " + sensorEventQueue.size());
                 final JSONArray allSensorsData  = new AggregatedSensorData(sensorEventQueue).getJSON();
                 JSONObject geoPoint = new JSONObject();
@@ -181,26 +181,8 @@ public class SensorRecordService extends Service implements SensorEventListener 
             }
         });
 
-        bgGeo.onMotionChange(new TSLocationCallback() {
-            @Override
-            public void onLocation(TSLocation tsLocation) {
-                Log.i(TAG, "[motionchange] " + tsLocation.toJson());
-            }
-            @Override
-            public void onError(Integer error) {
-                Log.i(TAG, "[motionchange] ERROR: " + error);
-            }
-        });
-
-        bgGeo.onHeartbeat(new TSHeartbeatCallback() {
-            @Override
-            public void onHeartbeat(HeartbeatEvent heartbeatEvent) {
-                Log.i(TAG, "[heartbeat] " + heartbeatEvent.toJson());
-            }
-        });
-
         // Finally, signal #ready to the SDK.
-        bgGeo.ready(new TSCallback() {
+        /*bgGeo.ready(new TSCallback() {
             @Override public void onSuccess() {
                 Log.i(TAG, "[ready] success");
                 if (!config.getEnabled()) {
@@ -217,7 +199,7 @@ public class SensorRecordService extends Service implements SensorEventListener 
             @Override public void onFailure(String error) {
                 Log.i(TAG, "[ready] FAILURE: " + error);
             }
-        });
+        });*/
     }
 
     @Override
@@ -230,11 +212,6 @@ public class SensorRecordService extends Service implements SensorEventListener 
         if (bgGeo != null) {
             Log.d(TAG, "Will stop the location service");
             bgGeo.stop();
-            try {
-                bgGeo.stopBackgroundTask(1);
-            } catch (Exception e) {
-                Log.e(TAG, "Cannot stop background service " + e.getMessage(), e);
-            }
             //bgGeo.getCount()
         }
     }
