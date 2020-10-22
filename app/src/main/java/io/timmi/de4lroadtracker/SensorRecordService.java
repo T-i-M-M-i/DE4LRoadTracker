@@ -161,7 +161,7 @@ public class SensorRecordService extends Service implements SensorEventListener 
                 JSONObject publishLocMessage = new JSONObject();
                 try {
                     geoPoint.put("lat", location.getLocation().getLatitude());
-                    geoPoint.put("long", location.getLocation().getLongitude());
+                    geoPoint.put("lon", location.getLocation().getLongitude());
 
                         publishLocMessage.put("deviceInfo", deviceInfo);
 

@@ -171,11 +171,11 @@ public class AggregatedSensorData {
 
             JSONObject valuesJSON = new JSONObject();
             try {
-                valuesJSON.put("minimum", sv.minVals);
-                valuesJSON.put("maximum", sv.maxVals);
-                valuesJSON.put("average", sv.avgVals);
-                valuesJSON.put("averageAccuracy", sv.avgAccuracy);
-                valuesJSON.put("countValues", sv.numVals);
+                valuesJSON.put("minimum", new JSONArray(sv.minVals));
+                valuesJSON.put("maximum", new JSONArray(sv.maxVals));
+                valuesJSON.put("average", new JSONArray(sv.avgVals));
+                valuesJSON.put("averageAccuracy", new JSONArray(sv.avgAccuracy));
+                valuesJSON.put("countValues", new JSONArray(sv.numVals));
 
                 if (sv.firstTimestamp != null) {
                     valuesJSON.put("firstTimestamp", sv.firstTimestamp);
