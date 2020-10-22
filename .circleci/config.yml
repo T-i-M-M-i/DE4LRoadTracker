@@ -29,7 +29,7 @@ anchors:
           run:
             name: "Publish Pre-Release on GitHub"
             command: |
-              ghr -delete -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -n "DE4LRoadTracker $(.circleci/get_version)" -b
+              ghr -delete -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -n "DE4LRoadTracker (nightly)" -b
 reference:
   store_artifacts: &store_artifacts
     store_artifacts: # for display in Artifacts: https://circleci.com/docs/2.0/artifacts/
