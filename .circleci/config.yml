@@ -33,7 +33,6 @@ jobs:
           command: |
             ./gradlew -PversionNumber=$(.circleci/get_version) assembleDebug
             mkdir -p /tmp/artifacts
-            echo $(.circleci/get_version)  > /tmp/artifacts/version.txt
             cp app/build/outputs/apk/debug/app-debug.apk /tmp/artifacts/DE4LRoadTracker-$(.circleci/get_version).apk
       - *store_artifacts
       - persist_to_workspace:
@@ -51,9 +50,8 @@ jobs:
       - run:
           name: Publish Release on GitHub
           command: |
-            ls /tmp
-            ls /tmp/artifacts
-            VERSION=$(cat /tmp/artifacts/version.txt)
+            pwd && ls -la
+            VERSION=$(ls /tmp/artifacts/*.apk | sed -e 's/.*-//' -e 's/\.apk*//')
             ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} /tmp/artifacts
 
 workflows:
