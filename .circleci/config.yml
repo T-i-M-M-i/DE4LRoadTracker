@@ -50,7 +50,6 @@ jobs:
       - run:
           name: Publish Release on GitHub
           command: |
-            pwd && ls -la
             VERSION=$(ls /tmp/artifacts/*.apk | sed -e 's/.*-//' -e 's/\.apk*//')
             ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} /tmp/artifacts
 
@@ -58,12 +57,15 @@ workflows:
   version: 2
   android-debug-build:
     jobs:
-      - build
+      - build:
+          filters:
+            tags:
+              only: /.*/
       - publish-github-release:
-          #filters:
-          #  tags:
-          #    only: /^v.*/
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
           requires:
             - build
-
-
