@@ -48,8 +48,7 @@ jobs:
       - run:
           name: Publish Release on GitHub
           command: |
-            VERSION=$(tail -1 ./artifacts/version.txt)
-            rm ./artifacts/version.txt
+            VERSION=${CIRCLE_TAG}
             ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./artifacts/
 
 workflows:
