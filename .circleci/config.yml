@@ -36,6 +36,9 @@ jobs:
             echo $(.circleci/get_version)  > /tmp/artifacts/version.txt
             cp app/build/outputs/apk/debug/app-debug.apk /tmp/artifacts/DE4LRoadTracker-$(.circleci/get_version).apk
       - *store_artifacts
+      - persist_to_workspace:
+          root: /tmp
+          paths: artifacts
   publish-github-release:
     docker:
       - image: cibuilds/github:0.10
@@ -44,12 +47,14 @@ jobs:
           password: $DOCKERHUB_PASSWORD
     steps:
       - attach_workspace:
-          at: ./artifacts
+          at: /tmp
       - run:
           name: Publish Release on GitHub
           command: |
-            VERSION=${CIRCLE_TAG}
-            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./artifacts/
+            ls /tmp
+            ls /tmp/artifacts
+            VERSION=$(cat /tmp/artifacts/version.txt)
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} /tmp/artifacts
 
 workflows:
   version: 2
@@ -57,9 +62,9 @@ workflows:
     jobs:
       - build
       - publish-github-release:
-          filters:
-            tags:
-              only: /^v.*/
+          #filters:
+          #  tags:
+          #    only: /^v.*/
           requires:
             - build
 
