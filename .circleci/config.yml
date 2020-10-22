@@ -58,9 +58,6 @@ workflows:
     jobs:
       - build
       - publish-github-release:
-          filters:
-            tags:
-              only: /^v.*/
           requires:
             - build
 
