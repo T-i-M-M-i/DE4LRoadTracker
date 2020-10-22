@@ -3,7 +3,7 @@ version: 2
 
 anchors:
   jobs:
-    job-github-release: &base_ghr
+    job-github-release:
       docker:
         - image: circleci/golang:1.13.0
       steps:
@@ -16,10 +16,10 @@ anchors:
               export USERNAME=$CIRCLE_PROJECT_USERNAME
               export BUILD_NUMBER=$CIRCLE_PREVIOUS_BUILD_NUM
               export PROJECT=$CIRCLE_PROJECT_REPONAME
-              curl https://circleci.com/api/v1.1/project/github/$USERNAME/$PROJECT/$BUILD_NUMBER/artifacts?circle-token=$CIRCLE_TOKEN | grep -o 'https://[^"]*' | sed -e "s/$/?circle-token=$CIRCLE_TOKEN/" | wget -P artifacts/ -v -i -
+              curl https://circleci.com/api/v1.1/project/github/$USERNAME/$PROJECT//artifacts?circle-token=$CIRCLE_TOKEN | grep -o 'https://[^"]*' | sed -e "s/$/?circle-token=$CIRCLE_TOKEN/" | wget -P artifacts/ -v -i -
               rename 's/.circle-token=\Q$ENV{CIRCLE_TOKEN}\E//' artifacts/*
         - &g_step2
-          run:
+          run:$BUILD_NUMBER
             name: "Preparing GitHub Release"
             command: |
               go get -u github.com/tcnksm/ghr
@@ -35,12 +35,6 @@ reference:
     store_artifacts: # for display in Artifacts: https://circleci.com/docs/2.0/artifacts/
       path: /tmp/artifacts
       destination: artifacts
-  publish_github_release: &publish_github_release
-    run:
-      name: Publish GitHub release
-      command: |
-        go get github.com/tcnksm/ghr
-        ghr -delete -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -n "DE4LRoadTracker (nightly)" v0.0.2 artifacts/
 jobs:
   build:
     working_directory: ~/code
@@ -69,19 +63,31 @@ jobs:
           command: |
             ./gradlew -PversionNumber=$(.circleci/get_version) assembleDebug
             mkdir -p /tmp/artifacts
+            echo $(.circleci/get_version)  > /tmp/artifacts/version.txt
             cp app/build/outputs/apk/debug/app-debug.apk /tmp/artifacts/DE4LRoadTracker-$(.circleci/get_version).apk
       - *store_artifacts
-  github-release:
-    <<: *base_ghr
+  publish-github-release:
+    docker:
+      - image: cibuilds/github:0.10
     steps:
-      [*g_step1,*g_step2,*run]
+      - attach_workspace:
+          at: ./artifacts
+      - run:
+          name: "Publish Release on GitHub"
+          command: |
+            VERSION=${tail -1 artifacts/version.txt}
+            rm artifacts/version.txt
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./artifacts/
 
 workflows:
   version: 2
   android-debug-build:
     jobs:
       - build
-      - github-release:
+      - publish-github-release:
+          filter:
+            tags:
+              only: /^v.*/
           requires:
             - build
 
