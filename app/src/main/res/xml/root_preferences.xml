@@ -10,38 +10,33 @@
             app:useSimpleSummaryProvider="true" />
 
         <EditTextPreference
-            app:key="locationServiceUrl"
-            app:title="@string/location_service_url"
-            app:defaultValue="http://172.22.99.134:9001/location"
-            app:useSimpleSummaryProvider="true" />
-        <EditTextPreference
             android:defaultValue=""
             android:key="mqttUsername"
             android:selectAllOnFocus="true"
             android:singleLine="true"
-            app:defaultValue="timmi"
+            app:defaultValue="timmi-pub"
             android:title="Username" />
         <EditTextPreference
             android:defaultValue=""
             android:key="mqttPW"
             android:selectAllOnFocus="true"
             android:singleLine="true"
-            app:defaultValue="NQeVfKtHrEnaNNOboF5Z"
+            app:defaultValue=""
             android:inputType="textPassword"
             android:title="Password" />
 
     </PreferenceCategory>
 
-    <PreferenceCategory app:title="@string/sync_header">
+    <PreferenceCategory app:title="@string/debug_header">
 
         <SwitchPreferenceCompat
-            app:key="sync"
-            app:title="@string/sync_title" />
-
-        <SwitchPreferenceCompat
-            app:key="powersave"
-            app:title="@string/power_save" />
-
+            app:key="sound"
+            app:title="@string/debug_sound" />
+        <EditTextPreference
+            app:key="locationServiceUrl"
+            app:title="@string/location_service_url"
+            app:defaultValue=""
+            app:useSimpleSummaryProvider="true" />
 
     </PreferenceCategory>
 

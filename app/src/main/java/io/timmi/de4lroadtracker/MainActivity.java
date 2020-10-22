@@ -3,7 +3,9 @@ package io.timmi.de4lroadtracker;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -29,34 +31,49 @@ import org.json.JSONObject;
 
 import io.timmi.de4lroadtracker.activity.DebugActivity;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
     private static final String TAG = "DE4LMainActivity";
     public static final String HISTORY_MESSAGE_BROADCAST = "io.timmi.de4lroadtracker.historymessagebroadcast";
     public static final String BUFFER_STATUS_BROADCAST = "io.timmi.de4lroadtracker.bufferstatusbroadcast";
+    private SharedPreferences settings;
 
     @Nullable
-    private BackgroundGeolocation bgGeo = null;
+    private BackgroundGeolocation bgGeo;
+    @Nullable
+    private TSConfig config;
+
+    public MainActivity() {
+        //no instance
+    }
 
     private void startBG() {
-        if(bgGeo  != null) {
+        if (bgGeo != null) {
             bgGeo.start();
-            return;
         }
+    }
+
+    private void initializeBGLocation() {
         bgGeo = BackgroundGeolocation.getInstance(getApplicationContext());
-        final TSConfig config = TSConfig.getInstance(getApplicationContext());
+        config = TSConfig.getInstance(getApplicationContext());
 
         // Configure the SDK
-        config.updateWithBuilder()
-                .setDebug(true) // Sound Fx / notifications during development
+        TSConfig.Builder builder = config.updateWithBuilder()
+                .setDebug(settings.getBoolean("sound", false)) // Sound Fx / notifications during development
                 .setLogLevel(5) // Verbose logging during development
                 .setDesiredAccuracy(LocationRequest.PRIORITY_HIGH_ACCURACY)
-                .setDistanceFilter(10F)
+                .setDistanceFilter(2F)
                 .setStopTimeout(1L)
                 .setHeartbeatInterval(60)
                 .setStopOnTerminate(false)
                 .setForegroundService(true)
-                .setStartOnBoot(true)
-                .commit();
+                .setStartOnBoot(true);
+
+        String debugUrl = settings.getString("locationServiceUrl", "");
+
+        if (!debugUrl.isEmpty()) {
+            builder.setUrl(debugUrl);
+        }
+        builder.commit();
 
         // Listen events
         bgGeo.onLocation(new TSLocationCallback() {
@@ -64,6 +81,7 @@ public class MainActivity extends AppCompatActivity {
             public void onLocation(TSLocation location) {
                 Log.i(TAG, "[location] from Main Activity " + location.toJson());
             }
+
             @Override
             public void onError(Integer code) {
                 Log.i(TAG, "[location] ERROR: " + code);
@@ -75,22 +93,17 @@ public class MainActivity extends AppCompatActivity {
             public void onLocation(TSLocation tsLocation) {
                 Log.i(TAG, "[motionchange] " + tsLocation.toJson());
             }
+
             @Override
             public void onError(Integer error) {
                 Log.i(TAG, "[motionchange] ERROR: " + error);
             }
         });
 
-        bgGeo.onHeartbeat(new TSHeartbeatCallback() {
-            @Override
-            public void onHeartbeat(HeartbeatEvent heartbeatEvent) {
-                Log.i(TAG, "[heartbeat] " + heartbeatEvent.toJson());
-            }
-        });
-
         // Finally, signal #ready to the SDK.
         bgGeo.ready(new TSCallback() {
-            @Override public void onSuccess() {
+            @Override
+            public void onSuccess() {
                 Log.i(TAG, "[ready] success");
                 if (!config.getEnabled()) {
                     // Start tracking immediately (if not already).
@@ -103,7 +116,9 @@ public class MainActivity extends AppCompatActivity {
                     Log.e(TAG, "cannot start background location tracker" + e.getMessage(), e);
                 }
             }
-            @Override public void onFailure(String error) {
+
+            @Override
+            public void onFailure(String error) {
                 Log.i(TAG, "[ready] FAILURE: " + error);
             }
         });
@@ -114,6 +129,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        settings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        initializeBGLocation();
 
     }
 
@@ -121,7 +138,7 @@ public class MainActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.activity_main, menu);
         MenuItem item = menu.findItem(R.id.menu_toggle);
-        if(isMyServiceRunning(SensorRecordService.class)) {
+        if (isMyServiceRunning(SensorRecordService.class)) {
             Log.i(TAG, "isMyServiceRunning = true");
             item.setIcon(R.drawable.baseline_stop_black_48);
             item.setTitle(R.string.stop_service);
@@ -179,7 +196,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void toggleService(MenuItem item) {
-        if(isMyServiceRunning(SensorRecordService.class)) {
+        if (isMyServiceRunning(SensorRecordService.class)) {
             stopService();
             item.setIcon(R.drawable.baseline_not_started_black_48);
             item.setTitle(R.string.start_service);
@@ -191,7 +208,26 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void startMqttTestActivity(MenuItem item) {
-        Intent intent  = new Intent(getBaseContext(), DebugActivity.class);
+        Intent intent = new Intent(getBaseContext(), DebugActivity.class);
         startActivity(intent);
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
+        if (config == null) {
+            return;
+        }
+        TSConfig.Builder builder = config.updateWithBuilder();
+        switch (s) {
+            case "sound":
+                builder.setDebug(settings.getBoolean("sound", false)); // Sound Fx / notifications during development
+                break;
+            case "locationServiceUrl":
+                String debugUrl = settings.getString("locationServiceUrl", "");
+                builder.setUrl(debugUrl);
+                break;
+            default:
+        }
+        builder.commit();
     }
 }

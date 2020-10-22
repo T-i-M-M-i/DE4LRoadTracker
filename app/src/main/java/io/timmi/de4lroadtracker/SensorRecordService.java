@@ -181,25 +181,6 @@ public class SensorRecordService extends Service implements SensorEventListener 
             }
         });
 
-        // Finally, signal #ready to the SDK.
-        /*bgGeo.ready(new TSCallback() {
-            @Override public void onSuccess() {
-                Log.i(TAG, "[ready] success");
-                if (!config.getEnabled()) {
-                    // Start tracking immediately (if not already).
-                } else {
-                    Log.d(TAG, "[ready] location services config tells it's already enabled, nevertheless we'll start the service again.");
-                }
-                try {
-                    bgGeo.start();
-                } catch (Exception e) {
-                    Log.e(TAG, "cannot start background location tracker" + e.getMessage(), e);
-                }
-            }
-            @Override public void onFailure(String error) {
-                Log.i(TAG, "[ready] FAILURE: " + error);
-            }
-        });*/
     }
 
     @Override

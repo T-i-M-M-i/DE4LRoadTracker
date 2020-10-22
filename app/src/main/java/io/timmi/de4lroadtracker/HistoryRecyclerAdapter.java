@@ -38,20 +38,20 @@ public class HistoryRecyclerAdapter extends RecyclerView.Adapter<HistoryRecycler
     public void onBindViewHolder(@NonNull ItemViewHolder holder, int position) {
         Log.i("HistoryRecyclerAdapter", "[onBindViewHolder]");
         holder.itemView.setText(historyMessageList.get(position));
-    }
+        }
 
-    @Override
-    public int getItemCount() {
+@Override
+public int getItemCount() {
         Log.i("HistoryRecyclerAdapter", "[getItemCount]");
         return historyMessageList.size();
-    }
-
-    public static class ItemViewHolder extends RecyclerView.ViewHolder {
-
-        TextView itemView;
-        public ItemViewHolder(@NonNull View _view) {
-            super(_view);
-            itemView = (TextView) _view.findViewById(R.id.row_text);
         }
+
+public static class ItemViewHolder extends RecyclerView.ViewHolder {
+
+    TextView itemView;
+    public ItemViewHolder(@NonNull View _view) {
+        super(_view);
+        itemView = (TextView) _view.findViewById(R.id.row_text);
     }
+}
 }
