@@ -1,35 +1,5 @@
 version: 2
 
-
-anchors:
-  jobs:
-    job-github-release:
-      docker:
-        - image: circleci/golang:1.13.0
-      steps:
-        - &g_step1
-          run:
-            name: "Download Artifacts & Dependences"
-            command: |
-              mkdir artifacts
-              sudo apt install rename
-              export USERNAME=$CIRCLE_PROJECT_USERNAME
-              export BUILD_NUMBER=$CIRCLE_PREVIOUS_BUILD_NUM
-              export PROJECT=$CIRCLE_PROJECT_REPONAME
-              curl https://circleci.com/api/v1.1/project/github/$USERNAME/$PROJECT//artifacts?circle-token=$CIRCLE_TOKEN | grep -o 'https://[^"]*' | sed -e "s/$/?circle-token=$CIRCLE_TOKEN/" | wget -P artifacts/ -v -i -
-              rename 's/.circle-token=\Q$ENV{CIRCLE_TOKEN}\E//' artifacts/*
-        - &g_step2
-          run:$BUILD_NUMBER
-            name: "Preparing GitHub Release"
-            command: |
-              go get -u github.com/tcnksm/ghr
-              echo "export APP_VERSION=$CIRCLE_TAG" >> $BASH_ENV
-              echo "export APP_BUILD_NUMBER=$CIRCLE_PREVIOUS_BUILD_NUM" >> $BASH_ENV
-        - &run
-          run:
-            name: "Publish Pre-Release on GitHub"
-            command: |
-              ghr -delete -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -n "DE4LRoadTracker (nightly)" v0.0.2 artifacts/
 reference:
   store_artifacts: &store_artifacts
     store_artifacts: # for display in Artifacts: https://circleci.com/docs/2.0/artifacts/
@@ -69,11 +39,14 @@ jobs:
   publish-github-release:
     docker:
       - image: cibuilds/github:0.10
+        auth:
+          username: bastilion
+          password: $DOCKERHUB_PASSWORD
     steps:
       - attach_workspace:
           at: ./artifacts
       - run:
-          name: "Publish Release on GitHub"
+          name: Publish Release on GitHub
           command: |
             VERSION=${tail -1 artifacts/version.txt}
             rm artifacts/version.txt
@@ -85,7 +58,7 @@ workflows:
     jobs:
       - build
       - publish-github-release:
-          filter:
+          filters:
             tags:
               only: /^v.*/
           requires:
