@@ -131,7 +131,6 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         setContentView(R.layout.activity_main);
         settings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         initializeBGLocation();
-
     }
 
     @Override
