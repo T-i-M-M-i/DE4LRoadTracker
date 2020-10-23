@@ -15,7 +15,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.Set;
 
 
 public class AggregatedSensorData {
@@ -89,51 +88,54 @@ public class AggregatedSensorData {
             SensorEvent measurement = sensorValues.remove();
             Sensor sensor = measurement.sensor;
 
-            AggregatedSensorValues sv = new AggregatedSensorValues(sensor);
+            AggregatedSensorValues svs = new AggregatedSensorValues(sensor);
             if (!svMap.containsKey(sensor)) {
                 svMap.put(sensor, new AggregatedSensorValues(sensor));
             } else {
-                sv = svMap.get(sensor);
+                svs = svMap.get(sensor);
             }
             for (int i = 0; i < measurement.values.length; i++) {
                 float val = measurement.values[i];
                 // if minimal is not set, it will be -1
                 float defaultMin = -1.0f;
                 float defaultMax = -1.0f;
-                setFill(i, sv.numVals,
-                        getOrElse(i, sv.numVals, 0) + 1,
+                setFill(i, svs.numVals,
+                        getOrElse(i, svs.numVals, 0) + 1,
                         0);
-                setFill(i, sv.summedVals,
-                        getOrElse(i, sv.summedVals, .0f) + val,
+                setFill(i, svs.summedVals,
+                        getOrElse(i, svs.summedVals, .0f) + val,
                         .0f);
-                setFill(i, sv.summedAccuracy,
-                        getOrElse(i, sv.summedAccuracy, 0) + measurement.accuracy,
+                setFill(i, svs.summedAccuracy,
+                        getOrElse(i, svs.summedAccuracy, 0) + measurement.accuracy,
                         0);
-                float max = getOrElse(i, sv.maxVals, defaultMax);
+                float max = getOrElse(i, svs.maxVals, defaultMax);
                 if (val > max || max == defaultMax)
-                    setFill(i, sv.maxVals, val, defaultMax);
-                float min = getOrElse(i, sv.minVals, defaultMin);
+                    setFill(i, svs.maxVals, val, defaultMax);
+                float min = getOrElse(i, svs.minVals, defaultMin);
                 if (val < min || min == defaultMin)
-                    setFill(i, sv.minVals, val, defaultMin);
+                    setFill(i, svs.minVals, val, defaultMin);
 
 
-            }
-            for (int i = 0; i < sv.numVals.size(); i++) {
-                int countVal = getOrElse(i, sv.numVals, 1);
-                setFill(i, sv.avgVals,
-                        sv.summedVals.get(i) / countVal,
-                        .0f);
-                setFill(i, sv.avgAccuracy,
-                        ((float) sv.summedAccuracy.get(i)) / countVal,
-                        .0f);
             }
 
             float ts = measurement.timestamp;
-            if (sv.firstTimestamp == null || sv.firstTimestamp > ts) {
-                sv.firstTimestamp = ts;
+            if (svs.firstTimestamp == null || svs.firstTimestamp > ts) {
+                svs.firstTimestamp = ts;
             }
-            if (sv.lastTimestamp == null || sv.lastTimestamp < ts) {
-                sv.lastTimestamp = ts;
+            if (svs.lastTimestamp == null || svs.lastTimestamp < ts) {
+                svs.lastTimestamp = ts;
+            }
+        }
+        for (Sensor sensor : svMap.keySet()) {
+            AggregatedSensorValues svs = svMap.get(sensor);
+            for (int i = 0; i < svs.numVals.size(); i++) {
+                int countVal = getOrElse(i, svs.numVals, 1);
+                setFill(i, svs.avgVals,
+                        svs.summedVals.get(i) / countVal,
+                        .0f);
+                setFill(i, svs.avgAccuracy,
+                        ((float) svs.summedAccuracy.get(i)) / countVal,
+                        .0f);
             }
         }
     }
