@@ -231,18 +231,30 @@ public class SensorRecordService extends Service implements SensorEventListener 
         }
     }
 
+    private void addToSensorEventQueue(SensorEvent sensorEvent, boolean shouldLog) {
+        sensorEventQueue.add(sensorEvent);
+        if(!shouldLog) {
+            return;
+        }
+        StringBuilder sb = new StringBuilder();
+        for(int i = 0; i < sensorEvent.values.length;i++) {
+            sb.append(sensorEvent.values[i]).append(" ");
+        }
+        Log.d(TAG, sensorEvent.timestamp + " value: " + sb.toString());
+    }
+
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
        // Log.i(TAG, "[sensorChanged] " + sensorEvent.toString());
         switch (sensorEvent.sensor.getType()) {
             case Sensor.TYPE_LIGHT: {
                 lastLightSensorEvent = sensorEvent;
-                sensorEventQueue.add(sensorEvent);
+                addToSensorEventQueue(sensorEvent, false);
                 break;
             }
             case Sensor.TYPE_ACCELEROMETER: {
                 lastAccSensorEvent = sensorEvent;
-                sensorEventQueue.add(sensorEvent);
+                addToSensorEventQueue(sensorEvent, true);
                 break;
             }
         }

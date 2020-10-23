@@ -3,6 +3,7 @@ package io.timmi.de4lroadtracker;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.os.Build;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 
@@ -94,6 +95,8 @@ public class AggregatedSensorData {
             } else {
                 svs = svMap.get(sensor);
             }
+
+            StringBuilder debugVals = new StringBuilder();
             for (int i = 0; i < measurement.values.length; i++) {
                 float val = measurement.values[i];
                 // if minimal is not set, it will be -1
@@ -115,10 +118,11 @@ public class AggregatedSensorData {
                 if (val < min || min == defaultMin)
                     setFill(i, svs.minVals, val, defaultMin);
 
-
+                debugVals.append(" ").append(val);
             }
 
             float ts = measurement.timestamp;
+            Log.d("AggragatedSensorData", "messaurement " + debugVals.toString() + "  val with ts " + measurement.timestamp);
             if (svs.firstTimestamp == null || svs.firstTimestamp > ts) {
                 svs.firstTimestamp = ts;
             }
