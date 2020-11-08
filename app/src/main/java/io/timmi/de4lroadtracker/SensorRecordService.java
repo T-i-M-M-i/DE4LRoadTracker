@@ -40,6 +40,8 @@ import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import io.timmi.de4lroadtracker.model.DE4LSensorEvent;
+
 public class SensorRecordService extends Service implements SensorEventListener {
     private static String TAG = "DE4SensorRecordService";
     private static final int NOTIFICATION = 1;
@@ -63,7 +65,7 @@ public class SensorRecordService extends Service implements SensorEventListener 
     private MQTTConnection mqttConnection = null;
     @Nullable
     private JSONObject deviceInfo = getDeviceJSON(null);
-    private Queue<SensorEvent> sensorEventQueue = new LinkedList<>();
+    private Queue<DE4LSensorEvent> sensorEventQueue = new LinkedList<>();
     /**
      * How many sensor events to store in the Queue, before dropping
      */
@@ -232,7 +234,7 @@ public class SensorRecordService extends Service implements SensorEventListener 
     }
 
     private void addToSensorEventQueue(SensorEvent sensorEvent, boolean shouldLog) {
-        sensorEventQueue.add(sensorEvent);
+        sensorEventQueue.add(new DE4LSensorEvent( sensorEvent ));
         if(!shouldLog) {
             return;
         }
