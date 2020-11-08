@@ -12,7 +12,6 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.IBinder;
-import android.provider.Settings;
 import android.provider.Settings.Secure;
 import android.util.Log;
 import android.widget.Toast;
@@ -40,6 +39,8 @@ import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import io.timmi.de4lroadtracker.model.DE4LSensorEvent;
+
 public class SensorRecordService extends Service implements SensorEventListener {
     private static String TAG = "DE4SensorRecordService";
     private static final int NOTIFICATION = 1;
@@ -63,7 +64,7 @@ public class SensorRecordService extends Service implements SensorEventListener 
     private MQTTConnection mqttConnection = null;
     @Nullable
     private JSONObject deviceInfo = getDeviceJSON(null);
-    private Queue<SensorEvent> sensorEventQueue = new LinkedList<>();
+    private Queue<DE4LSensorEvent> sensorEventQueue = new LinkedList<>();
     /**
      * How many sensor events to store in the Queue, before dropping
      */
@@ -231,18 +232,30 @@ public class SensorRecordService extends Service implements SensorEventListener 
         }
     }
 
+    private void addToSensorEventQueue(SensorEvent sensorEvent, boolean shouldLog) {
+        sensorEventQueue.add(new DE4LSensorEvent( sensorEvent ));
+        if(!shouldLog) {
+            return;
+        }
+        StringBuilder sb = new StringBuilder();
+        for(int i = 0; i < sensorEvent.values.length;i++) {
+            sb.append(sensorEvent.values[i]).append(" ");
+        }
+        Log.d(TAG, sensorEvent.timestamp + " value: " + sb.toString());
+    }
+
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
        // Log.i(TAG, "[sensorChanged] " + sensorEvent.toString());
         switch (sensorEvent.sensor.getType()) {
             case Sensor.TYPE_LIGHT: {
                 lastLightSensorEvent = sensorEvent;
-                sensorEventQueue.add(sensorEvent);
+                addToSensorEventQueue(sensorEvent, false);
                 break;
             }
             case Sensor.TYPE_ACCELEROMETER: {
                 lastAccSensorEvent = sensorEvent;
-                sensorEventQueue.add(sensorEvent);
+                addToSensorEventQueue(sensorEvent, true);
                 break;
             }
         }

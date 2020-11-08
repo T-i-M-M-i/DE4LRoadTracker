@@ -1,7 +1,6 @@
 package io.timmi.de4lroadtracker;
 
 import android.hardware.Sensor;
-import android.hardware.SensorEvent;
 import android.os.Build;
 
 import androidx.annotation.Nullable;
@@ -15,6 +14,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+
+import io.timmi.de4lroadtracker.model.DE4LSensorEvent;
 
 
 public class AggregatedSensorData {
@@ -32,7 +33,7 @@ public class AggregatedSensorData {
         public Float firstTimestamp = null;
         @Nullable
         public Float lastTimestamp = null;
-        public Sensor sensor = null;
+        public Sensor sensor;
 
         public AggregatedSensorValues(Sensor sensor) {
             this.sensor = sensor;
@@ -54,7 +55,7 @@ public class AggregatedSensorData {
      * @param sensorValues The queue will be eaten by this class and will be empty after the class has
      *                     been instantiated
      */
-    public AggregatedSensorData(Queue<SensorEvent> sensorValues) {
+    public AggregatedSensorData(Queue<DE4LSensorEvent> sensorValues) {
         aggregateSensorData(sensorValues);
     }
 
@@ -82,10 +83,10 @@ public class AggregatedSensorData {
         return list.get(idx);
     }
 
-    private void aggregateSensorData(Queue<SensorEvent> sensorValues) {
+    private void aggregateSensorData(Queue<DE4LSensorEvent> sensorValues) {
 
         while (!sensorValues.isEmpty()) {
-            SensorEvent measurement = sensorValues.remove();
+            DE4LSensorEvent measurement = sensorValues.remove();
             Sensor sensor = measurement.sensor;
 
             AggregatedSensorValues svs = new AggregatedSensorValues(sensor);
