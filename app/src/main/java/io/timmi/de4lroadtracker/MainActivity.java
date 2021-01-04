@@ -1,33 +1,29 @@
 package io.timmi.de4lroadtracker;
 
+import android.Manifest;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.view.menu.ActionMenuItemView;
-import androidx.appcompat.view.menu.MenuItemImpl;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.google.android.gms.location.LocationRequest;
 import com.transistorsoft.locationmanager.adapter.BackgroundGeolocation;
 import com.transistorsoft.locationmanager.adapter.TSConfig;
 import com.transistorsoft.locationmanager.adapter.callback.TSCallback;
-import com.transistorsoft.locationmanager.adapter.callback.TSHeartbeatCallback;
 import com.transistorsoft.locationmanager.adapter.callback.TSLocationCallback;
-import com.transistorsoft.locationmanager.event.HeartbeatEvent;
 import com.transistorsoft.locationmanager.location.TSLocation;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import io.timmi.de4lroadtracker.activity.DebugActivity;
 
@@ -35,6 +31,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     private static final String TAG = "DE4LMainActivity";
     public static final String HISTORY_MESSAGE_BROADCAST = "io.timmi.de4lroadtracker.historymessagebroadcast";
     public static final String BUFFER_STATUS_BROADCAST = "io.timmi.de4lroadtracker.bufferstatusbroadcast";
+    private static final int REQUEST_CODE_OPEN_DOCUMENT_TREE = 100;
     private SharedPreferences settings;
 
     @Nullable
@@ -124,12 +121,24 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         });
 
     }
+    private void askAndroid10Perm()
+    {
+        if (Build.VERSION.SDK_INT >= 23) {
+            int result = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
+            if (result != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+            new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_CODE_OPEN_DOCUMENT_TREE);
+            }
+        }
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         settings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        askAndroid10Perm();
         initializeBGLocation();
     }
 
