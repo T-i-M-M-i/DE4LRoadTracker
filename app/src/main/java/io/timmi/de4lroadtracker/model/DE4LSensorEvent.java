@@ -16,7 +16,8 @@ public class DE4LSensorEvent {
         accuracy = ev.accuracy;
         sensor = ev.sensor;
         timestamp = ev.timestamp;
-        values = ev.values;
+        values = new float[ev.values.length];
+        System.arraycopy(ev.values, 0, values, 0, ev.values.length);
     }
 
 
