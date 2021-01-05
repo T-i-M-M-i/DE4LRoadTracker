@@ -6,6 +6,8 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -19,23 +21,15 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
-import com.google.android.gms.location.LocationRequest;
 import com.transistorsoft.locationmanager.adapter.BackgroundGeolocation;
-import com.transistorsoft.locationmanager.adapter.TSConfig;
-import com.transistorsoft.locationmanager.adapter.callback.TSCallback;
-import com.transistorsoft.locationmanager.adapter.callback.TSHeartbeatCallback;
 import com.transistorsoft.locationmanager.adapter.callback.TSLocationCallback;
-import com.transistorsoft.locationmanager.event.HeartbeatEvent;
 import com.transistorsoft.locationmanager.location.TSLocation;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -65,13 +59,14 @@ public class SensorRecordService extends Service implements SensorEventListener 
     @Nullable
     private JSONObject deviceInfo = getDeviceJSON(null);
     private Queue<DE4LSensorEvent> sensorEventQueue = new LinkedList<>();
+    @Nullable
+    private JSONObject appInfo = null;
     /**
      * How many sensor events to store in the Queue, before dropping
      */
     private final int maxQueueSize = 10000;
     private final Queue<SensorEvent> lightSensorQueue = new LinkedBlockingQueue<SensorEvent>();
     private final Queue<SensorEvent> accSensorQueue = new LinkedBlockingQueue<SensorEvent>();
-
 
 
     @SuppressLint("HardwareIds")
@@ -96,14 +91,14 @@ public class SensorRecordService extends Service implements SensorEventListener 
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         light = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
-        sensorManager.registerListener(this, accelerometer , SensorManager.SENSOR_DELAY_NORMAL);
-        sensorManager.registerListener(this, light , SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(this, light, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
 
     public JSONObject sensorValueToJson(SensorEvent sensorValue) {
-        JSONObject  res = new JSONObject();
-        if(sensorValue == null)
+        JSONObject res = new JSONObject();
+        if (sensorValue == null)
             return res;
         try {
             res.put("values", new JSONArray(sensorValue.values));
@@ -122,12 +117,28 @@ public class SensorRecordService extends Service implements SensorEventListener 
     public IBinder onBind(Intent intent) {
         return null;
     }
+
+    private JSONObject getAppInfo() {
+        JSONObject res = new JSONObject();
+        try {
+            PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+            res.put("version", pInfo.versionName);
+            res.put("versionCode", pInfo.versionCode);
+            res.put("packageName", pInfo.packageName);
+        } catch (PackageManager.NameNotFoundException | JSONException e) {
+            e.printStackTrace();
+        }
+        return res;
+
+    }
+
     public void onCreate() {
         super.onCreate();
         Toast.makeText(getBaseContext(), "tracking service started", Toast.LENGTH_SHORT).show();
 
         deviceInfo = getDeviceJSON(getApplicationContext());
 
+        appInfo = getAppInfo();
         setupNotifications();
         showNotification();
         setupSensors();
@@ -157,14 +168,16 @@ public class SensorRecordService extends Service implements SensorEventListener 
             public void onLocation(TSLocation location) {
                 Log.i(TAG, "[location] from service" + location.toJson());
                 Log.i(TAG, "[sensorEventQueue] size: " + sensorEventQueue.size());
-                final JSONArray allSensorsData  = new AggregatedSensorData(sensorEventQueue).getJSON();
+                final JSONArray allSensorsData = new AggregatedSensorData(sensorEventQueue).getJSON();
                 JSONObject geoPoint = new JSONObject();
                 JSONObject publishLocMessage = new JSONObject();
                 try {
                     geoPoint.put("lat", location.getLocation().getLatitude());
                     geoPoint.put("lon", location.getLocation().getLongitude());
 
-                        publishLocMessage.put("deviceInfo", deviceInfo);
+
+                    publishLocMessage.put("deviceInfo", deviceInfo);
+                    publishLocMessage.put("appInfo", appInfo);
 
                     publishLocMessage.put("location", location.toJson());
                     publishLocMessage.put("data", allSensorsData);
@@ -176,6 +189,7 @@ public class SensorRecordService extends Service implements SensorEventListener 
                     e.printStackTrace();
                 }
             }
+
             @Override
             public void onError(Integer code) {
                 Log.i(TAG, "[location] ERROR: " + code);
@@ -187,7 +201,7 @@ public class SensorRecordService extends Service implements SensorEventListener 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Toast.makeText(getBaseContext(),"tracking service stopped", Toast.LENGTH_LONG).show();
+        Toast.makeText(getBaseContext(), "tracking service stopped", Toast.LENGTH_LONG).show();
         if (mNotificationManager != null) {
             mNotificationManager.cancel(NOTIFICATION);
         }
@@ -233,12 +247,12 @@ public class SensorRecordService extends Service implements SensorEventListener 
     }
 
     private void addToSensorEventQueue(SensorEvent sensorEvent, boolean shouldLog) {
-        sensorEventQueue.add(new DE4LSensorEvent( sensorEvent ));
-        if(!shouldLog) {
+        sensorEventQueue.add(new DE4LSensorEvent(sensorEvent));
+        if (!shouldLog) {
             return;
         }
         StringBuilder sb = new StringBuilder();
-        for(int i = 0; i < sensorEvent.values.length;i++) {
+        for (int i = 0; i < sensorEvent.values.length; i++) {
             sb.append(sensorEvent.values[i]).append(" ");
         }
         Log.d(TAG, sensorEvent.timestamp + " value: " + sb.toString());
@@ -246,7 +260,7 @@ public class SensorRecordService extends Service implements SensorEventListener 
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
-       // Log.i(TAG, "[sensorChanged] " + sensorEvent.toString());
+        // Log.i(TAG, "[sensorChanged] " + sensorEvent.toString());
         switch (sensorEvent.sensor.getType()) {
             case Sensor.TYPE_LIGHT: {
                 lastLightSensorEvent = sensorEvent;
