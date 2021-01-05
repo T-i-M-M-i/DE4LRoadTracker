@@ -8,8 +8,8 @@ android {
         applicationId "io.timmi.de4lroadtracker"
         minSdkVersion 21
         targetSdkVersion 29
-        versionCode 4
-        versionName "0.0.9"
+        versionCode 5
+        versionName "0.0.10"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
