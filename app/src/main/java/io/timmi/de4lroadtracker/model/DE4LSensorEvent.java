@@ -9,6 +9,14 @@ public class DE4LSensorEvent {
     public long timestamp;
     public final float[] values;
 
+
+    public DE4LSensorEvent(int accuracy, Sensor sensor, long timestamp, float[] values) {
+        this.accuracy = accuracy;
+        this.sensor = sensor;
+        System.arraycopy(values, 0, this.values, 0, values.length);
+        this.timestamp = timestamp;
+    }
+
     public DE4LSensorEvent(int valueSize) {
         values = new float[valueSize];
     }
