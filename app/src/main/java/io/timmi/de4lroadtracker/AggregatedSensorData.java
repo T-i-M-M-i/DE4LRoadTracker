@@ -2,6 +2,7 @@ package io.timmi.de4lroadtracker;
 
 import android.hardware.Sensor;
 import android.os.Build;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 
@@ -26,6 +27,7 @@ public class AggregatedSensorData {
         public final List<Float> maxVals = new ArrayList<>();
         public final List<Float> summedVals = new ArrayList<>();
         public final List<Integer> summedAccuracy = new ArrayList<>();
+        public final List<Double> summedQuadVals = new ArrayList<>();
         public final List<Float> avgVals = new ArrayList<>();
         public final List<Float> avgAccuracy = new ArrayList<>();
         public final List<Integer> numVals = new ArrayList<>();
@@ -85,6 +87,7 @@ public class AggregatedSensorData {
 
     private void aggregateSensorData(Queue<DE4LSensorEvent> sensorValues) {
 
+
         while (!sensorValues.isEmpty()) {
             DE4LSensorEvent measurement = sensorValues.remove();
             Sensor sensor = measurement.sensor;
@@ -95,11 +98,15 @@ public class AggregatedSensorData {
             } else {
                 svs = svMap.get(sensor);
             }
+
+
             for (int i = 0; i < measurement.values.length; i++) {
                 float val = measurement.values[i];
-                // if minimal is not set, it will be -1
-                float defaultMin = -1.0f;
-                float defaultMax = -1.0f;
+                double quadVal = (double) val * (double) val;
+
+                setFill(i, svs.summedQuadVals,
+                        getOrElse(i, svs.summedQuadVals, .0d) + quadVal,
+                        .0d);
                 setFill(i, svs.numVals,
                         getOrElse(i, svs.numVals, 0) + 1,
                         0);
@@ -109,12 +116,14 @@ public class AggregatedSensorData {
                 setFill(i, svs.summedAccuracy,
                         getOrElse(i, svs.summedAccuracy, 0) + measurement.accuracy,
                         0);
-                float max = getOrElse(i, svs.maxVals, defaultMax);
-                if (val > max || max == defaultMax)
-                    setFill(i, svs.maxVals, val, defaultMax);
-                float min = getOrElse(i, svs.minVals, defaultMin);
-                if (val < min || min == defaultMin)
-                    setFill(i, svs.minVals, val, defaultMin);
+
+                float max = getOrElse(i, svs.maxVals, Float.NEGATIVE_INFINITY);
+                if ( val > max)
+                    setFill(i, svs.maxVals, val, Float.NEGATIVE_INFINITY);
+
+                float min = getOrElse(i, svs.minVals, Float.POSITIVE_INFINITY);
+                if (val < min)
+                    setFill(i, svs.minVals, val, Float.POSITIVE_INFINITY);
 
 
             }
@@ -137,6 +146,9 @@ public class AggregatedSensorData {
                 setFill(i, svs.avgAccuracy,
                         ((float) svs.summedAccuracy.get(i)) / countVal,
                         .0f);
+                setFill(i, svs.summedQuadVals,
+                        Math.sqrt( (double) svs.summedQuadVals.get(i) / countVal),
+                        .0d);
             }
         }
     }
@@ -176,6 +188,7 @@ public class AggregatedSensorData {
             try {
                 valuesJSON.put("minimum", new JSONArray(sv.minVals));
                 valuesJSON.put("maximum", new JSONArray(sv.maxVals));
+                //valuesJSON.put("standardDeviation", new JSONArray(sv.summedQuadVals));
                 valuesJSON.put("average", new JSONArray(sv.avgVals));
                 valuesJSON.put("averageAccuracy", new JSONArray(sv.avgAccuracy));
                 valuesJSON.put("countValues", new JSONArray(sv.numVals));
@@ -197,6 +210,7 @@ public class AggregatedSensorData {
             }
             sensorsValArr.put(res);
         }
+        Log.d("AggregatedSensorValue", "arr: " + sensorsValArr);
 
         return sensorsValArr;
     }
