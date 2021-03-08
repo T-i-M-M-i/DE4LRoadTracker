@@ -256,32 +256,34 @@ public class SensorRecordService extends Service implements SensorEventListener 
         Log.d(TAG, sensorEvent.timestamp + " value: " + sb.toString());
     }
 
+    private  DE4LSensorEvent accelerometerReading = new DE4LSensorEvent(3);
+    private  DE4LSensorEvent magnetometerReading = new DE4LSensorEvent(3);
 
-    private final float[] orientation = new float[3];
-    private final float[] magnetometer = new float[3];
-    private final float[] accelerometer = new float[3];
     private final float[] rotationMatrix = new float[9];
+    private final float[] orientationAngles = new float[3];
     private final float[] rotationInverted = new float[16];
 
 
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
+        // Log.i(TAG, "[sensorChanged] " + sensorEvent.toString());
         switch (sensorEvent.sensor.getType()) {
             case Sensor.TYPE_LIGHT: {
                 addToSensorEventQueue(sensorEvent, false);
                 break;
             }
             case Sensor.TYPE_ACCELEROMETER: {
-                System.arraycopy(accelerometer, 0, sensorEvent.values, 0, 3);
+                //addToSensorEventQueue(sensorEvent, true);
+                accelerometerReading = new DE4LSensorEvent(sensorEvent);
                 break;
             }
             case Sensor.TYPE_MAGNETIC_FIELD: {
-                System.arraycopy(magnetometer, 0, sensorEvent.values, 0, 3);
+                orientationAngles = new DE4LSensorEvent(sensorEvent);
                 break;
             }
             case Sensor.TYPE_ROTATION_VECTOR: {
-                float[] rotation = new float[16];
+                float[] rotation = new float[16]
                 SensorManager.getRotationMatrixFromVector(rotation, sensorEvent.values);
                 android.opengl.Matrix.invertM(rotationInverted, 0, rotation, 0);
                 break;
@@ -289,15 +291,13 @@ public class SensorRecordService extends Service implements SensorEventListener 
             }
             case Sensor.TYPE_LINEAR_ACCELERATION: {
                 float[] linAcc = new float[sensorEvent.values.length];
-                float[] accelrationAxis = new float[sensorEvent.values.length];
+                float[] accelartionAxis = new float[sensorEvent.values.length];
                 System.arraycopy(sensorEvent.values, 0, linAcc, 0, sensorEvent.values.length);
-                android.opengl.Matrix.multiplyMV(accelrationAxis, 0, rotationInverted, 0, linAcc, 0);
-                //sensorEventQueue.add(new DE4LSensorEvent(sensorEvent.accuracy, sensorEvent.sensor, sensorEvent.timestamp, linAcc ));
+                android.opengl.Matrix.multiplyMV(accelartionAxis, 0, rotationInverted, 0, linAcc, 0);
+                sensorEventQueue.add(new DE4LSensorEvent(sensorEvent.accuracy, sensorEvent.sensor, sensorEvent.timestamp, linAcc ))
                 break;
             }
         }
-        //TODO the folllowing could be used, optionally
-        updateOrientationAngles();
     }
 
     // Compute the three orientation angles based on the most recent readings from
@@ -305,10 +305,10 @@ public class SensorRecordService extends Service implements SensorEventListener 
     public void updateOrientationAngles() {
         // Update rotation matrix, which is needed to update orientation angles.
         SensorManager.getRotationMatrix(rotationMatrix, null,
-                accelerometer, magnetometer);
+                accelerometerReading.values, magnetometerReading.values);
 
         // "rotationMatrix" now has up-to-date information.
-        SensorManager.getOrientation(rotationMatrix, orientation);
+        SensorManager.getOrientation(rotationMatrix, orientationAngles);
         // "orientationAngles" now has up-to-date information.
     }
 
