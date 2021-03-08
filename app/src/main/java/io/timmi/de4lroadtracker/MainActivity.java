@@ -26,6 +26,7 @@ import com.transistorsoft.locationmanager.adapter.callback.TSLocationCallback;
 import com.transistorsoft.locationmanager.location.TSLocation;
 
 import io.timmi.de4lroadtracker.activity.DebugActivity;
+import io.timmi.de4lroadtracker.helper.TrackerIndicatorNotification;
 
 public class MainActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
     private static final String TAG = "DE4LMainActivity";
@@ -33,6 +34,8 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     public static final String BUFFER_STATUS_BROADCAST = "io.timmi.de4lroadtracker.bufferstatusbroadcast";
     private static final int REQUEST_CODE_OPEN_DOCUMENT_TREE = 100;
     private SharedPreferences settings;
+    @Nullable
+    private MenuItem stopStartMenuItem = null;
 
     @Nullable
     private BackgroundGeolocation bgGeo;
@@ -146,6 +149,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.activity_main, menu);
         MenuItem item = menu.findItem(R.id.menu_toggle);
+        stopStartMenuItem = item;
         if (isMyServiceRunning(SensorRecordService.class)) {
             Log.i(TAG, "isMyServiceRunning = true");
             item.setIcon(R.drawable.baseline_stop_black_48);
@@ -174,15 +178,23 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         return false;
     }
 
-    public void startService() {
+    public void startTrackingService() {
         startBG();
         startService(new Intent(getBaseContext(), SensorRecordService.class));
+        if(stopStartMenuItem != null) {
+            stopStartMenuItem.setIcon(R.drawable.baseline_stop_black_48);
+            stopStartMenuItem.setTitle(R.string.stop_service);
+        }
         //moveTaskToBack(true);
         //finish();
     }
 
-    public void stopService() {
+    public void stopTrackingService() {
         stopService(new Intent(getBaseContext(), SensorRecordService.class));
+        if(stopStartMenuItem != null) {
+            stopStartMenuItem.setIcon(R.drawable.baseline_not_started_black_48);
+            stopStartMenuItem.setTitle(R.string.start_service);
+        }
     }
 
     @Override
@@ -193,8 +205,8 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
             return;
         }
         switch (action) {
-            case SensorRecordService.CLOSE_ACTION:
-                stopService(new Intent(this, SensorRecordService.class));
+            case TrackerIndicatorNotification.CLOSE_ACTION:
+                stopTrackingService();
                 break;
         }
     }
@@ -205,13 +217,9 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
     public void toggleService(MenuItem item) {
         if (isMyServiceRunning(SensorRecordService.class)) {
-            stopService();
-            item.setIcon(R.drawable.baseline_not_started_black_48);
-            item.setTitle(R.string.start_service);
+            stopTrackingService();
         } else {
-            startService();
-            item.setIcon(R.drawable.baseline_stop_black_48);
-            item.setTitle(R.string.stop_service);
+            startTrackingService();
         }
     }
 

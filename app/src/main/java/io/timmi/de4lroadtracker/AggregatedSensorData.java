@@ -13,53 +13,17 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
-import java.util.Queue;
 
+import io.timmi.de4lroadtracker.model.AggregatedSensorValues;
 import io.timmi.de4lroadtracker.model.DE4LSensorEvent;
 
 
 public class AggregatedSensorData {
 
-    private static class AggregatedSensorValues {
-
-        public final List<Float> minVals = new ArrayList<>();
-        public final List<Float> maxVals = new ArrayList<>();
-        public final List<Float> summedVals = new ArrayList<>();
-        public final List<Integer> summedAccuracy = new ArrayList<>();
-        public final List<Double> summedQuadVals = new ArrayList<>();
-        public final List<Float> avgVals = new ArrayList<>();
-        public final List<Float> avgAccuracy = new ArrayList<>();
-        public final List<Integer> numVals = new ArrayList<>();
-        @Nullable
-        public Float firstTimestamp = null;
-        @Nullable
-        public Float lastTimestamp = null;
-        public Sensor sensor;
-
-        public AggregatedSensorValues(Sensor sensor) {
-            this.sensor = sensor;
-        }
-
-    }
-
-    private final Map<Sensor, AggregatedSensorValues> svMap = new HashMap<>();
 
 
-    /**
-     * Take a Queue of values and process each value to
-     * form min, max and average values.
-     *
-     * The data will be partitioned by the sensor.
-     *
-     * Each sensor, will get its own min, max , average structure
-     *
-     * @param sensorValues The queue will be eaten by this class and will be empty after the class has
-     *                     been instantiated
-     */
-    public AggregatedSensorData(Queue<DE4LSensorEvent> sensorValues) {
-        aggregateSensorData(sensorValues);
-    }
 
     /**
      * you can savely set the nth element of a List, because the List will be
@@ -85,18 +49,31 @@ public class AggregatedSensorData {
         return list.get(idx);
     }
 
-    private void aggregateSensorData(Queue<DE4LSensorEvent> sensorValues) {
+    /**
+     * Take a List of values and process each value to
+     * form min, max and average values.
+     *
+     * The data will be partitioned by type of sensor.
+     *
+     * Each sensor, will get its own min, max , average structure
+     *
+     * @param sensorValues The list of values
+     */
 
+    public static Map<String, AggregatedSensorValues> aggregateSensorData(List<DE4LSensorEvent> sensorValues) {
 
-        while (!sensorValues.isEmpty()) {
-            DE4LSensorEvent measurement = sensorValues.remove();
+        Map<String, AggregatedSensorValues> svMap = new HashMap<>();
+        ListIterator<DE4LSensorEvent> valueIterator  = sensorValues.listIterator();
+
+        while (!valueIterator.hasNext()) {
+            DE4LSensorEvent measurement = valueIterator.next();
             Sensor sensor = measurement.sensor;
 
-            AggregatedSensorValues svs = new AggregatedSensorValues(sensor);
-            if (!svMap.containsKey(sensor)) {
-                svMap.put(sensor, new AggregatedSensorValues(sensor));
+            AggregatedSensorValues svs = new AggregatedSensorValues(measurement.key, sensor);
+            if (!svMap.containsKey(svs.key)) {
+                svMap.put(svs.key , new AggregatedSensorValues(svs.key, sensor));
             } else {
-                svs = svMap.get(sensor);
+                svs = svMap.get(svs.key);
             }
 
 
@@ -136,8 +113,8 @@ public class AggregatedSensorData {
                 svs.lastTimestamp = ts;
             }
         }
-        for (Sensor sensor : svMap.keySet()) {
-            AggregatedSensorValues svs = svMap.get(sensor);
+        for (String key : svMap.keySet()) {
+            AggregatedSensorValues svs = svMap.get(key);
             for (int i = 0; i < svs.numVals.size(); i++) {
                 int countVal = getOrElse(i, svs.numVals, 1);
                 setFill(i, svs.avgVals,
@@ -151,67 +128,8 @@ public class AggregatedSensorData {
                         .0d);
             }
         }
+        return svMap;
     }
 
-    public JSONArray getJSON() {
-
-        JSONArray sensorsValArr = new JSONArray();
-
-        for (Map.Entry<Sensor, AggregatedSensorValues> svEntry : svMap.entrySet()) {
-
-            JSONObject res = new JSONObject();
-            Sensor sensor = svEntry.getKey();
-
-            JSONObject sensorJSON = new JSONObject();
-
-            try {
-                sensorJSON.put("name", sensor.getName());
-                sensorJSON.put("type", sensor.getType());
-                sensorJSON.put("vendor", sensor.getVendor());
-                sensorJSON.put("maximumRange", sensor.getMaximumRange());
-                sensorJSON.put("power", sensor.getPower());
-                sensorJSON.put("resolution", sensor.getResolution());
-                sensorJSON.put("version", sensor.getVersion());
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    sensorJSON.put("id", sensor.getId());
-                }
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    sensorJSON.put("highestDirectReportRateLevel", sensor.getHighestDirectReportRateLevel());
-                }
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-
-            AggregatedSensorValues sv = svEntry.getValue();
-
-            JSONObject valuesJSON = new JSONObject();
-            try {
-                valuesJSON.put("minimum", new JSONArray(sv.minVals));
-                valuesJSON.put("maximum", new JSONArray(sv.maxVals));
-                //valuesJSON.put("standardDeviation", new JSONArray(sv.summedQuadVals));
-                valuesJSON.put("average", new JSONArray(sv.avgVals));
-                valuesJSON.put("averageAccuracy", new JSONArray(sv.avgAccuracy));
-                valuesJSON.put("countValues", new JSONArray(sv.numVals));
-
-                if (sv.firstTimestamp != null) {
-                    valuesJSON.put("firstTimestamp", sv.firstTimestamp);
-                }
-                if (sv.lastTimestamp != null) {
-                    valuesJSON.put("lastTimestamp", sv.lastTimestamp);
-                }
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-            try {
-                res.put("sensor", sensorJSON);
-                res.put("aggregatedValues", valuesJSON);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-            sensorsValArr.put(res);
-        }
-        Log.d("AggregatedSensorValue", "arr: " + sensorsValArr);
-
-        return sensorsValArr;
-    }
+    //public JSONArray
 }
