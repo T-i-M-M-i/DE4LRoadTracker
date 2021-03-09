@@ -17,7 +17,7 @@ import io.timmi.de4lroadtracker.model.AggregatedSensorValues;
 public class JsonSerializer {
 
 
-    public static  JSONArray aggregatedSensorDataToJSON(Map<String, AggregatedSensorValues> svMap) {
+    public static JSONArray aggregatedSensorDataToJSON(Map<String, AggregatedSensorValues> svMap) throws JSONException {
 
         JSONArray sensorsValArr = new JSONArray();
 
@@ -28,50 +28,39 @@ public class JsonSerializer {
 
             JSONObject sensorJSON = new JSONObject();
 
-            try {
-                sensorJSON.put("name", sensor.getName());
-                sensorJSON.put("type", sensor.getType());
-                sensorJSON.put("vendor", sensor.getVendor());
-                sensorJSON.put("maximumRange", sensor.getMaximumRange());
-                sensorJSON.put("power", sensor.getPower());
-                sensorJSON.put("resolution", sensor.getResolution());
-                sensorJSON.put("version", sensor.getVersion());
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    sensorJSON.put("id", sensor.getId());
-                }
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    sensorJSON.put("highestDirectReportRateLevel", sensor.getHighestDirectReportRateLevel());
-                }
-            } catch (JSONException e) {
-                e.printStackTrace();
+            sensorJSON.put("name", sensor.getName());
+            sensorJSON.put("type", sensor.getType());
+            sensorJSON.put("vendor", sensor.getVendor());
+            sensorJSON.put("maximumRange", sensor.getMaximumRange());
+            sensorJSON.put("power", sensor.getPower());
+            sensorJSON.put("resolution", sensor.getResolution());
+            sensorJSON.put("version", sensor.getVersion());
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                sensorJSON.put("id", sensor.getId());
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                sensorJSON.put("highestDirectReportRateLevel", sensor.getHighestDirectReportRateLevel());
             }
 
             AggregatedSensorValues sv = svEntry.getValue();
 
             JSONObject valuesJSON = new JSONObject();
-            try {
-                valuesJSON.put("minimum", new JSONArray(sv.minVals));
-                valuesJSON.put("maximum", new JSONArray(sv.maxVals));
-                //valuesJSON.put("standardDeviation", new JSONArray(sv.summedQuadVals));
-                valuesJSON.put("average", new JSONArray(sv.avgVals));
-                valuesJSON.put("averageAccuracy", new JSONArray(sv.avgAccuracy));
-                valuesJSON.put("countValues", new JSONArray(sv.numVals));
+            valuesJSON.put("minimum", new JSONArray(sv.minVals));
+            valuesJSON.put("maximum", new JSONArray(sv.maxVals));
+            //valuesJSON.put("standardDeviation", new JSONArray(sv.summedQuadVals));
+            valuesJSON.put("average", new JSONArray(sv.avgVals));
+            valuesJSON.put("averageAccuracy", new JSONArray(sv.avgAccuracy));
+            valuesJSON.put("countValues", new JSONArray(sv.numVals));
 
-                if (sv.firstTimestamp != null) {
-                    valuesJSON.put("firstTimestamp", sv.firstTimestamp);
-                }
-                if (sv.lastTimestamp != null) {
-                    valuesJSON.put("lastTimestamp", sv.lastTimestamp);
-                }
-            } catch (JSONException e) {
-                e.printStackTrace();
+            if (sv.firstTimestamp != null) {
+                valuesJSON.put("firstTimestamp", sv.firstTimestamp);
             }
-            try {
-                res.put("sensor", sensorJSON);
-                res.put("aggregatedValues", valuesJSON);
-            } catch (JSONException e) {
-                e.printStackTrace();
+            if (sv.lastTimestamp != null) {
+                valuesJSON.put("lastTimestamp", sv.lastTimestamp);
             }
+
+            res.put("sensor", sensorJSON);
+            res.put("aggregatedValues", valuesJSON);
             sensorsValArr.put(res);
         }
         Log.d("AggregatedSensorValue", "arr: " + sensorsValArr);
