@@ -1,40 +1,27 @@
 package io.timmi.de4lroadtracker;
 
-import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.os.Build;
 import android.os.IBinder;
-import android.provider.Settings.Secure;
 import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
-import androidx.core.app.NotificationCompat;
 
 import com.transistorsoft.locationmanager.adapter.BackgroundGeolocation;
 import com.transistorsoft.locationmanager.adapter.callback.TSLocationCallback;
 import com.transistorsoft.locationmanager.location.TSLocation;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.json.JSONStringer;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
-import java.util.concurrent.LinkedBlockingQueue;
 
 import io.timmi.de4lroadtracker.helper.JsonInfoBuilder;
 import io.timmi.de4lroadtracker.helper.JsonSerializer;
@@ -53,15 +40,10 @@ public class SensorRecordService extends Service implements SensorEventListener 
     @Nullable
     private JSONObject deviceInfo = null;
     private TrackerIndicatorNotification notification = new TrackerIndicatorNotification(this);
-    /**
-     * How many sensor events to store in the Queue, before dropping
-     */
-    private final int maxQueueSize = 10000;
 
     private void clearSensorData() {
         sensorEventQueue = new LinkedList<DE4LSensorEvent>();
     }
-
 
     private void setupSensors() {
         SensorManager sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -72,9 +54,7 @@ public class SensorRecordService extends Service implements SensorEventListener 
         sensorManager.registerListener(this, light, SensorManager.SENSOR_DELAY_NORMAL);
         sensorManager.registerListener(this, linearAcceleration, SensorManager.SENSOR_DELAY_NORMAL);
         sensorManager.registerListener(this, rotationVector, SensorManager.SENSOR_DELAY_NORMAL);
-
     }
-
 
     @Nullable
     @Override
@@ -101,27 +81,20 @@ public class SensorRecordService extends Service implements SensorEventListener 
         bgGeo.onLocation(new TSLocationCallback() {
             @Override
             public void onLocation(TSLocation location) {
-                Log.i(TAG, "[location] from service" + location.toJson());
-                Log.i(TAG, "[sensorEventQueue] size: " + sensorEventQueue.size());
-                final JSONArray allSensorsData = JsonSerializer.aggregatedSensorDataToJSON(
-                        AggregatedSensorData.aggregateSensorData(sensorEventQueue));
-                clearSensorData();
+                Log.d(TAG, "[location] from service" + location.toJson());
+                Log.d(TAG, "[sensorEventQueue] size: " + sensorEventQueue.size());
 
-                JSONObject geoPoint = new JSONObject();
-                JSONObject publishLocMessage = new JSONObject();
                 try {
-                    geoPoint.put("lat", location.getLocation().getLatitude());
-                    geoPoint.put("lon", location.getLocation().getLongitude());
-
-                    publishLocMessage.put("deviceInfo", deviceInfo);
-                    publishLocMessage.put("appInfo", appInfo);
-
-                    publishLocMessage.put("location", location.toJson());
-                    publishLocMessage.put("data", allSensorsData);
-                    publishLocMessage.put("geoPoint", geoPoint);
-                    mqttConnection.publishMessage(publishLocMessage.toString(2));
+                  JSONObject finalMessageJSON = JsonSerializer.finalMessageDataToJSON(
+                          location,
+                          AggregatedSensorData.aggregateSensorData(sensorEventQueue),
+                          deviceInfo,
+                          appInfo );
+                  mqttConnection.publishMessage(finalMessageJSON.toString(2));
                 } catch (JSONException e) {
                     e.printStackTrace();
+                } finally {
+                    clearSensorData();
                 }
             }
 
@@ -130,7 +103,6 @@ public class SensorRecordService extends Service implements SensorEventListener 
                 Log.i(TAG, "[location] ERROR: " + code);
             }
         });
-
     }
 
     @Override

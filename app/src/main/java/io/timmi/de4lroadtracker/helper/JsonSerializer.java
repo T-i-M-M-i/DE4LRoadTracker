@@ -79,4 +79,19 @@ public class JsonSerializer {
         return sensorsValArr;
     }
 
+
+    public static JSONObject finalMessageDataToJSON(TSLocation location, Map<String, AggregatedSensorValues> aggregatedSensorValuesMap, JSONObject deviceInfo, JSONObject appInfo) throws JSONException {
+        JSONObject geoPoint = new JSONObject();
+        JSONObject publishLocMessage = new JSONObject();
+        geoPoint.put("lat", location.getLocation().getLatitude());
+        geoPoint.put("lon", location.getLocation().getLongitude());
+
+        publishLocMessage.put("deviceInfo", deviceInfo);
+        publishLocMessage.put("appInfo", appInfo);
+        publishLocMessage.put("location", location.toJson());
+        publishLocMessage.put("data", JsonSerializer.aggregatedSensorDataToJSON(aggregatedSensorValuesMap));
+        publishLocMessage.put("geoPoint", geoPoint);
+        return publishLocMessage;
+    }
+
 }
