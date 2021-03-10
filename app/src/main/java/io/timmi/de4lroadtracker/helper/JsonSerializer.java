@@ -1,15 +1,21 @@
 package io.timmi.de4lroadtracker.helper;
 
 import android.hardware.Sensor;
+import android.location.Location;
 import android.os.Build;
 
+import com.google.android.gms.location.DetectedActivity;
 import com.transistorsoft.locationmanager.location.TSLocation;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.TimeZone;
 
 import io.timmi.de4lroadtracker.model.AggregatedSensorValues;
 
@@ -44,6 +50,13 @@ public class JsonSerializer {
         return res;
     }
 
+    public static String unixMSToISO(long unixTimestamp) {
+        Date date = new Date(unixTimestamp);
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+        sdf.setTimeZone(TimeZone.getTimeZone("GMT+1"));
+        return sdf.format(date);
+    }
+
     public static JSONObject buildGeneralSensorJSON(AggregatedSensorValues sv) throws JSONException {
         Sensor sensor = sv.sensor;
 
@@ -66,10 +79,16 @@ public class JsonSerializer {
         valuesJSON.put("additionalProperties", sensorJSON);
 
         if (sv.firstTimestamp != null) {
-            valuesJSON.put("firstTimestamp", sv.firstTimestamp);
+            valuesJSON.put("firstSensorTimestampNanos", sv.firstTimestamp);
+        }
+        if(sv.firstUnixTimestampInMS != null) {
+            valuesJSON.put("firstTimestamp", unixMSToISO(sv.firstUnixTimestampInMS));
         }
         if (sv.lastTimestamp != null) {
-            valuesJSON.put("lastTimestamp", sv.lastTimestamp);
+            valuesJSON.put("lastSensorTimestampNanos", sv.lastTimestamp);
+        }
+        if(sv.lastUnixTimestampInMS != null) {
+            valuesJSON.put("lastTimestamp", unixMSToISO(sv.lastUnixTimestampInMS));
         }
         valuesJSON.put("numberOfAggregatedValues", sv.summedVals);
 
@@ -116,15 +135,26 @@ public class JsonSerializer {
         resJSON.put("geoPoint", geoPoint);
 
         JSONObject detectedActivityJSON = new JSONObject();
-        detectedActivityJSON.put("confidence", location.getDetectedActivity().getConfidence());
-        detectedActivityJSON.put("type", location.getDetectedActivity().getType());
+        DetectedActivity activity = location.getDetectedActivity();
+        if(activity != null) {
+            detectedActivityJSON.put("confidence", activity.getConfidence());
+            detectedActivityJSON.put("type", activity.getType());
+            detectedActivityJSON.put("name", location.getActivityName());
+        }
         resJSON.put("detectedActivity", detectedActivityJSON);
 
         JSONObject coordsJSON = new JSONObject();
-        coordsJSON.put("altitude", location.getLocation().getAltitude());
-        coordsJSON.put("bearing", location.getLocation().getBearing());
-        coordsJSON.put("accuracy", location.getLocation().getAccuracy());
-        coordsJSON.put("speed", location.getLocation().getSpeed());
+        Location loc = location.getLocation();
+        if(loc.hasAltitude()) coordsJSON.put("altitude", loc.getAltitude());
+        if(loc.hasBearing()) {
+            coordsJSON.put("bearing", loc.getBearing());
+            /*
+            TODO: calculate heading from bearing
+            DecimalFormat twoDForm = new DecimalFormat("0.00", new DecimalFormatSymbols.<init>(Locale.US));
+            Double heading = !Float.isNaN(loc.getBearing()) ? Double.valueOf(twoDForm.format((double)loc.getBearing())) : -1.0D;
+            */
+        }
+        if(loc.hasSpeed()) coordsJSON.put("speed", loc.getSpeed());
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             coordsJSON.put("speedAccuracyMetersPerSecond", location.getLocation().getSpeedAccuracyMetersPerSecond());
         }
