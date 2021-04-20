@@ -21,6 +21,8 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 public class MQTTConnection  implements SharedPreferences.OnSharedPreferenceChangeListener {
 
+
+    private static final String TAG = "MQTTConnection";
     private SharedPreferences settings;
     MqttAndroidClient mqttAndroidClient;
     @Nullable
@@ -124,7 +126,6 @@ public class MQTTConnection  implements SharedPreferences.OnSharedPreferenceChan
 
 
     private void addToHistory(String mainText){
-        System.out.println("LOG: " + mainText);
         sendHistoryBroadcast(mainText);
 
     }
@@ -160,6 +161,7 @@ public class MQTTConnection  implements SharedPreferences.OnSharedPreferenceChan
 
     public void publishMessage(String publishMessage){
 
+        //Log.d(TAG, publishMessage);
         if(mqttAndroidClient == null || !mqttAndroidClient.isConnected()) {
             System.err.println("no mqtt client available!");
             return;
