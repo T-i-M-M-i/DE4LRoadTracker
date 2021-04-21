@@ -57,7 +57,7 @@ public class AggregatedSensorData {
 
 
     /**
-     * you can savely set the nth element of a List, because the List will be
+     * you can safely set the nth element of a List, because the List will be
      * expanded with _filler accordingly
      *
      * @param idx    element index to be set
