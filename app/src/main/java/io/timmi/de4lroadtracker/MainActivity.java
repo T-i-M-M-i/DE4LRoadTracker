@@ -66,7 +66,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                 .setHeartbeatInterval(60)
                 .setStopOnTerminate(false)
                 .setForegroundService(true)
-                .setStartOnBoot(true);
+                .setStartOnBoot(false);
 
         String debugUrl = settings.getString("locationServiceUrl", "");
 
@@ -143,6 +143,9 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         settings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         askAndroid10Perm();
         initializeBGLocation();
+        if(!settings.getBoolean("hasPrivacyAgreement", false)) {
+            startActivity(new Intent(this, PrivacyAgreementActivity.class));
+        }
     }
 
     @Override
@@ -213,6 +216,10 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
     public void showSettings(MenuItem item) {
         startActivityForResult(new Intent(this, SettingsActivity.class), 0);
+    }
+
+    public void showPrivacyAgreement(MenuItem item) {
+        startActivity(new Intent(this, PrivacyAgreementActivity.class));
     }
 
     public void toggleService(MenuItem item) {

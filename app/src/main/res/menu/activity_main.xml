@@ -15,6 +15,11 @@
         app:showAsAction="never"
         android:title="@string/menu_settings"/>
     <item
+        android:icon="@drawable/ic_settings_white_48dp"
+        android:onClick="showPrivacyAgreement"
+        app:showAsAction="never"
+        android:title="@string/menu_privacy"/>
+    <item
         android:onClick="startMqttTestActivity"
         app:showAsAction="never"
         android:title="@string/menu_debug"/>
