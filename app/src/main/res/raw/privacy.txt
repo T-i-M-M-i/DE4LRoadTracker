@@ -1,0 +1,108 @@
+# 1. DATENSCHUTZ
+
+
+
+1. Diese Datenschutzerklärung klärt Nutzer über die Art, den Umfang und
+Zwecke der Erhebung und Verwendung personenbezogener Daten durch den
+verantwortlichen Anbieter, TiMMi Transport GmbH, Dittrichring 15 in
+04109 Leipzig, auf der Webseite timmitransport.de bzw. TiMMi Transport
+auf. Die rechtlichen Grundlagen des Datenschutzes finden sich im
+Bundesdatenschutzgesetz (BDSG) und dem Telemediengesetz (TMG), sowie
+auch im Art. 13 der Europäischen Datenschutzgrundverordnung (DS-GVO).
+
+
+2. TiMMi Transport GmbH nimmt den Schutz Ihrer persönlichen Daten sehr
+ernst. Ihre personenbezogenen Daten werden vertraulich und entsprechend
+der gesetzlichen Datenschutzvorschriften sowie dieser
+Datenschutzerklärung behandelt. Datenschutzrechtlicher Verantwortlicher
+für die Verarbeitung von personenbezogenen Daten im Zusammenhang mit der
+Erbringung von Dienstleistungen ist die
+
+TiMMi Transport GmbH
+
+Dittrichring 15
+
+04109 Leipzig
+
+
+3. Die Nutzung der De4LRoadTracker App fängt an, wenn der Nutzer die
+App freiwillig auf einem von Ihnen benutztem Mobiltelefon installiert.
+In diesem Moment werden allerdings keine personenbezogenen Daten
+erhoben. Erst wenn der Dienst aktiv gestartet wird, erfasst die App die
+Verortungsdaten des Nutzers, sowie auch Daten wie Beschleunigung,
+Erschütterung und Lichtbedingungen des Nutzers. Diese Daten könnten ggf.
+genutzt werden, um Rückschlüsse auf die Identität des Nutzers zu machen
+und gelten somit als personen-bezogenen Daten. Die Daten werden an einer
+Plattform, die die Daten auswertet, übermittelt, sobald eine
+Internetverbindung besteht und werden ab dem Einschalten des Dienstes
+solange erfasst bis den Nutzer den Dienst wieder ausschaltet. Die Daten
+werden zur Forschungszwecken genutzt und werden im Laufe dieser
+Forschung anonymisiert. Solange die Anonymisierung erfolgreich ist,
+werden die anonyme, d.h. nicht mehr personen-bezogene Daten auch zu
+wirtschaftlichen Zwecken eingesetzt.
+
+
+4. Als Nutzer haben Sie das Recht auf Auskunft, Berichtigung, Löschung,
+Einschränkung der Verarbeitung, Widerspruch der Verarbeitung, Widerruf
+Ihrer Einwilligung zur Datenverarbeitung, Datenübertragbarkeit, und
+Beschwerde. Um einen Antrag entsprechend Ihren Rechten zu stellen,
+reicht eine formlose Email mit den entsprechenden Informationen an:
+<info@timmi.io>. So erreichen Sie den Datenschutzbeauftragter des
+Unternehmens.
+
+6. Wir weisen darauf hin, dass die Datenübertragung im Internet (z.B.
+bei der Kommunikation per E-Mail) Sicherheitslücken aufweisen kann. Wir
+überprüfen regelmäßig unsere Sicherheitsrichtlinien und Verfahren, um
+die Sicherheit unserer Systeme zu gewährleisten. Ein lückenloser Schutz
+der Daten vor dem Zugriff durch Dritte ist nicht möglich.
+
+## 2. ZUGRIFFSDATEN / SERVER-LOGFILES
+
+1. Der Anbieter bzw. sein Webspace-Provider erheben Daten über jeden
+Zugriff auf das Angebot (sog. Serverlogfiles). Zu den Zugriffsdaten
+gehören u.a. Name der abgerufenen Webseite, Datei, Datum und Uhrzeit des
+Abrufs, übertragene Datenmenge, Meldung über erfolgreichen Abruf,
+Browsertyp nebst Version, das Betriebssystem des Nutzers, Referrer URL
+(die zuvor besuchte Seite), IP-Adresse und der anfragende Provider.
+
+2. Der Anbieter verwendet die Protokolldaten nur für statistische
+Auswertungen zum Zweck des Betriebs, der Sicherheit und der Optimierung
+des Angebotes. Der Anbieter behält sich jedoch vor, die Protokolldaten
+nachträglich zu überprüfen, wenn aufgrund konkreter Anhaltspunkte der
+berechtigte Verdacht einer rechtswidrigen Nutzung besteht.
+
+## 3. UMGANG MIT PERSONENBEZOGENEN DATEN
+
+1. Personenbezogene Daten sind Informationen, mit deren Hilfe eine
+Person bestimmbar ist, also Angaben, die zurück zu einer Person verfolgt
+werden können. Dazu gehören der Name, Anschrift, die E-Mail Adresse oder
+die Telefonnummer. Aber auch Daten über Vorlieben, Hobbies,
+Mitgliedschaften oder welche Webseiten von jemandem angesehen wurden
+zählen zu personenbezogenen Daten.
+
+2. Personenbezogene Daten werden von dem Anbieter nur dann erhoben,
+genutzt und weiter gegeben, wenn dies gesetzlich erlaubt ist oder die
+Nutzer in die Datenerhebung einwilligen.
+
+## 4. AUSKUNFT, LÖSCHUNG, SPERRUNG
+
+1. Sie haben jederzeit das Recht auf unentgeltliche Auskunft über Ihre
+gespeicherten personenbezogenen Daten, deren Herkunft und Empfänger und
+den Zweck der Datenverarbeitung sowie ein Recht auf Berichtigung,
+Sperrung oder Löschung dieser Daten. Hierzu sowie zu weiteren Fragen zum
+Thema personenbezogene Daten können Sie sich jederzeit unter der im
+Impressum angegebenen Adresse an uns wenden. Der Datenschutzbeauftragter
+ist direkt unter die angegebene Emailadresse info(@)timmi.io erreichbar.
+
+## 5. WEITERGABE PERSONENBEZOGENER DATEN
+
+1. timmitransport.de bzw. TiMMi Transport nutzt Ihre personenbezogenen
+Informationen nur wie in dieser Erklärung beschrieben und gibt sie nur
+an solche Unternehmen weiter, die bei der Erfüllung der mit Ihnen
+abgeschlossenen Verträge eingeschaltet werden. Ansonsten werden Ihre
+personenbezogenen Angaben nicht an Dritte weitergegeben, wenn Sie dazu
+nicht ausdrücklich Ihr Einverständnis gegeben haben oder wir zur
+Herausgabe verpflichtet sind, beispielsweise aufgrund einer
+gerichtlichen oder behördlichen Anordnung.
+
+**Stand Januar 2021**
