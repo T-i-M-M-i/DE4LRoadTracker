@@ -3,6 +3,7 @@ package io.timmi.de4lroadtracker.helper;
 import android.hardware.Sensor;
 import android.location.Location;
 import android.os.Build;
+import android.util.Log;
 
 import com.google.android.gms.location.DetectedActivity;
 import com.transistorsoft.locationmanager.location.TSLocation;
@@ -27,7 +28,8 @@ public class JsonSerializer {
      * increase minor only if properties have been added, or new data will be delivered
      * increase MAJOR, if the schema a diverged in an incompatible manner, or important properties have been removed
      */
-    static final String SCHEMA_VERSION = "2.1.1";
+    static final String SCHEMA_VERSION = "2.1.2";
+    static final String TAG = "JsonSerializer";
 
     /**
      * will merge keys of all objs , if same keys occur in multiple objects the
@@ -90,17 +92,17 @@ public class JsonSerializer {
         if(sv.lastUnixTimestampInMS != null) {
             valuesJSON.put("lastTimestamp", unixMSToISO(sv.lastUnixTimestampInMS));
         }
-        valuesJSON.put("numberOfAggregatedValues", sv.summedVals);
+        valuesJSON.put("numberOfAggregatedValues", sv.summedVals.size());
 
         return valuesJSON;
     }
 
 
-    public static JSONObject buildMinMaxAvgJSON(int index, AggregatedSensorValues sv) throws JSONException {
+    public static JSONObject buildMinMaxAvgJSON(int index, AggregatedSensorValues sv) throws JSONException, IndexOutOfBoundsException {
         JSONObject res = new JSONObject();
-        if(sv.minVals.size() <= index) res.put("minimum", sv.minVals.get(index));
-        if(sv.maxVals.size() <= index) res.put("maximum", sv.maxVals.get(index));
-        if(sv.avgVals.size() <= index) res.put("average", sv.avgVals.get(index));
+        if(sv.minVals.size() > index) res.put("minimum", sv.minVals.get(index));
+        if(sv.maxVals.size() > index) res.put("maximum", sv.maxVals.get(index));
+        if(sv.avgVals.size() > index) res.put("average", sv.avgVals.get(index));
         return res;
     }
 
@@ -111,9 +113,13 @@ public class JsonSerializer {
         if(svMap.containsKey("acceleration")) {
             AggregatedSensorValues sv = svMap.get("acceleration");
             JSONObject valuesJSON = buildGeneralSensorJSON(sv);
-            valuesJSON.put("xAxis", buildMinMaxAvgJSON(0, sv));
-            valuesJSON.put("yAxis", buildMinMaxAvgJSON(1, sv));
-            valuesJSON.put("zAxis", buildMinMaxAvgJSON(2, sv));
+            try {
+                valuesJSON.put("xAxis", buildMinMaxAvgJSON(0, sv));
+                valuesJSON.put("yAxis", buildMinMaxAvgJSON(1, sv));
+                valuesJSON.put("zAxis", buildMinMaxAvgJSON(2, sv));
+            } catch (IndexOutOfBoundsException e) {
+                Log.e(TAG,"Index out of bound in min/max/average calculation", e);
+            }
             res.put("accelaration", valuesJSON);
         }
         if(svMap.containsKey("light")) {
