@@ -3,11 +3,14 @@ package io.timmi.de4lroadtracker;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.location.Location;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -40,6 +43,8 @@ public class SensorRecordService extends Service implements SensorEventListener 
     @Nullable
     private JSONObject deviceInfo = null;
     private TrackerIndicatorNotification notification = new TrackerIndicatorNotification(this);
+    @Nullable
+    private Location previousLocation = null;
 
     private void clearSensorData() {
         sensorEventQueue = new LinkedList<DE4LSensorEvent>();
@@ -62,6 +67,15 @@ public class SensorRecordService extends Service implements SensorEventListener 
         return null;
     }
 
+    private void storeDistance(float distance) {
+
+        SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        Long previousDistance = settings.getLong("distanceMeterTracked", 0);
+        SharedPreferences.Editor settingsEditor = settings.edit();
+        settingsEditor.putLong("distanceMeterTracked", previousDistance + ((int) Math.round(distance)));
+        settingsEditor.apply();
+    }
+
     public void onCreate() {
         super.onCreate();
         Toast.makeText(getBaseContext(), "tracking service started", Toast.LENGTH_SHORT).show();
@@ -81,8 +95,14 @@ public class SensorRecordService extends Service implements SensorEventListener 
         bgGeo.onLocation(new TSLocationCallback() {
             @Override
             public void onLocation(TSLocation location) {
+                if(previousLocation != null) {
+                    float distance = previousLocation.distanceTo(location.getLocation());
+                    storeDistance(distance);
+                }
+                previousLocation = new Location( location.getLocation() );
                 Log.d(TAG, "[location] from service" + location.toJson());
                 Log.d(TAG, "[sensorEventQueue] size: " + sensorEventQueue.size());
+
 
                 try {
                   JSONObject finalMessageJSON = JsonSerializer.finalMessageDataToJSON(
