@@ -19,11 +19,14 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
+import io.timmi.de4lroadtracker.activity.MQTTActivity;
+
 public class MQTTConnection  implements SharedPreferences.OnSharedPreferenceChangeListener {
 
 
     private static final String TAG = "MQTTConnection";
     private SharedPreferences settings;
+    @Nullable
     MqttAndroidClient mqttAndroidClient;
     @Nullable
     private Context appContext = null;
@@ -37,13 +40,14 @@ public class MQTTConnection  implements SharedPreferences.OnSharedPreferenceChan
         settings = PreferenceManager.getDefaultSharedPreferences(context);
         settings.registerOnSharedPreferenceChangeListener(this);
 
-        connectMqtt(appContext);
+        this.appContext = appContext;
+        connectMqtt();
 
     }
 
 
 
-    private void connectMqtt(Context _appContext) {
+    private void connectMqtt() {
 
         final String serverUri = settings.getString("mqttUrl", "");
 
@@ -52,9 +56,11 @@ public class MQTTConnection  implements SharedPreferences.OnSharedPreferenceChan
             mqttAndroidClient.close();
         }
 
-        appContext = _appContext;
         mqttAndroidClient = new MqttAndroidClient(appContext, serverUri, clientId);
         mqttAndroidClient.setCallback(new MqttCallbackExtended() {
+            SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(MQTTConnection.this.appContext);
+            private long messagesDelivered = (long) settings.getLong("messagesDelivered", 0);
+
             @Override
             public void connectComplete(boolean reconnect, String serverURI) {
 
@@ -79,7 +85,10 @@ public class MQTTConnection  implements SharedPreferences.OnSharedPreferenceChan
 
             @Override
             public void deliveryComplete(IMqttDeliveryToken token) {
-
+                messagesDelivered++;
+                SharedPreferences.Editor settingsEditor = settings.edit();
+                settingsEditor.putLong("messagesDelivered", messagesDelivered);
+                settingsEditor.apply();
             }
         });
 
@@ -101,6 +110,7 @@ public class MQTTConnection  implements SharedPreferences.OnSharedPreferenceChan
             mqttAndroidClient.connect(mqttConnectOptions, null, new IMqttActionListener() {
                 @Override
                 public void onSuccess(IMqttToken asyncActionToken) {
+                    addToHistory("Connected to: " + String.valueOf( asyncActionToken.isComplete()));
                     DisconnectedBufferOptions disconnectedBufferOptions = new DisconnectedBufferOptions();
                     disconnectedBufferOptions.setBufferEnabled(true);
                     disconnectedBufferOptions.setBufferSize(100);
@@ -126,6 +136,7 @@ public class MQTTConnection  implements SharedPreferences.OnSharedPreferenceChan
 
 
     private void addToHistory(String mainText){
+        Log.d(TAG, "historyMessage: " + mainText);
         sendHistoryBroadcast(mainText);
 
     }
@@ -207,8 +218,10 @@ public class MQTTConnection  implements SharedPreferences.OnSharedPreferenceChan
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
         switch (s) {
             case "mqttUrl":
+            case "mqttPW":
+            case "mqttUsername":
                 if(appContext != null) {
-                    connectMqtt(appContext);
+                    connectMqtt();
                 }
                 break;
             default:
