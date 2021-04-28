@@ -22,6 +22,7 @@ public class DE4LSensorEvent {
     }
 
     public DE4LSensorEvent(String key, SensorEvent ev) {
+        this.key = key;
         accuracy = ev.accuracy;
         sensor = ev.sensor;
         timestamp = ev.timestamp;
