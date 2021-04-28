@@ -12,6 +12,7 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -26,6 +27,8 @@ import com.transistorsoft.locationmanager.adapter.callback.TSLocationCallback;
 import com.transistorsoft.locationmanager.location.TSLocation;
 
 import io.timmi.de4lroadtracker.activity.DebugActivity;
+import io.timmi.de4lroadtracker.helper.Md5Builder;
+import io.timmi.de4lroadtracker.helper.RawResourceLoader;
 import io.timmi.de4lroadtracker.helper.TrackerIndicatorNotification;
 
 public class MainActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
@@ -135,15 +138,39 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         }
     }
 
+    private void updateView() {
+        TextView amountOfWaypoints = (TextView) findViewById(R.id.amountOfWaypoints);
+        amountOfWaypoints.setText(
+                String.valueOf(settings.getLong("messagesDelivered", 0))
+        );
+        TextView distanceView = (TextView) findViewById(R.id.distance);
+        String distanceTracked =
+                String.valueOf(settings.getLong("distanceMeterTracked", 0) / 1000) + " km";
+        distanceView.setText(distanceTracked);
+    }
+
+    private boolean privacyAgreementAccepted() {
+        String agreementText = RawResourceLoader.loadText(R.raw.privacy, this);
+        SharedPreferences sharedPreferences = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this);
+        if(sharedPreferences.contains("agreedPrivacyMD5") && agreementText != null) {
+            try {
+                return Md5Builder.md5(agreementText).equals(sharedPreferences.getString("agreedPrivacyMD5", ""));
+            } catch (Exception e) { }
+        }
+        return false;
+
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         settings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        settings.registerOnSharedPreferenceChangeListener(this);
+        updateView();
         askAndroid10Perm();
         initializeBGLocation();
-        if(!settings.getBoolean("hasPrivacyAgreement", false)) {
+        if(!privacyAgreementAccepted()) {
             startActivity(new Intent(this, PrivacyAgreementActivity.class));
         }
     }
@@ -168,6 +195,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        settings.unregisterOnSharedPreferenceChangeListener(this);
         //unregisterReceiver();
     }
 
@@ -234,23 +262,38 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         Intent intent = new Intent(getBaseContext(), DebugActivity.class);
         startActivity(intent);
     }
+    private void updateTSDebugUrl(String debugUrl) {
 
-    @Override
-    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
         if (config == null) {
             return;
         }
         TSConfig.Builder builder = config.updateWithBuilder();
+        builder.setUrl(debugUrl);
+        builder.commit();
+    }
+    private void updateTSSound(boolean withSound) {
+        if (config == null) {
+            return;
+        }
+        TSConfig.Builder builder = config.updateWithBuilder();
+        builder.setDebug(withSound); // Sound Fx / notifications during development
+        builder.commit();
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
         switch (s) {
+            case "distanceMeterTracked":
+            case "messagesDelivered":
+                updateView();
+                break;
             case "sound":
-                builder.setDebug(settings.getBoolean("sound", false)); // Sound Fx / notifications during development
+                updateTSSound(settings.getBoolean("sound", false));
                 break;
             case "locationServiceUrl":
-                String debugUrl = settings.getString("locationServiceUrl", "");
-                builder.setUrl(debugUrl);
+                updateTSDebugUrl(settings.getString("locationServiceUrl", ""));
                 break;
             default:
         }
-        builder.commit();
     }
 }
