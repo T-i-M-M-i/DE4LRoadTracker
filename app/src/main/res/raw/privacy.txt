@@ -1,4 +1,7 @@
-# 1. DATENSCHUTZ
+Datenschutzerklärung DE4L - Timmi
+====
+
+## 1. DATENSCHUTZ
 
 
 
@@ -58,18 +61,11 @@ der Daten vor dem Zugriff durch Dritte ist nicht möglich.
 
 ## 2. ZUGRIFFSDATEN / SERVER-LOGFILES
 
-1. Der Anbieter bzw. sein Webspace-Provider erheben Daten über jeden
-Zugriff auf das Angebot (sog. Serverlogfiles). Zu den Zugriffsdaten
-gehören u.a. Name der abgerufenen Webseite, Datei, Datum und Uhrzeit des
-Abrufs, übertragene Datenmenge, Meldung über erfolgreichen Abruf,
-Browsertyp nebst Version, das Betriebssystem des Nutzers, Referrer URL
-(die zuvor besuchte Seite), IP-Adresse und der anfragende Provider.
+1. Der Anbieter erhebt keine Logfiles Die Anwendung schreibt lokale
+Loginformationen auf das Gerät des Nutyenden. Diese Daten werden nicht weitergeleitet.
+Bei einem Fehlerreport, wird der Endnutzer explizit gefragt, ob Fehlerbehabungsdaten
+per E-Mail übertragen werden sollen.
 
-2. Der Anbieter verwendet die Protokolldaten nur für statistische
-Auswertungen zum Zweck des Betriebs, der Sicherheit und der Optimierung
-des Angebotes. Der Anbieter behält sich jedoch vor, die Protokolldaten
-nachträglich zu überprüfen, wenn aufgrund konkreter Anhaltspunkte der
-berechtigte Verdacht einer rechtswidrigen Nutzung besteht.
 
 ## 3. UMGANG MIT PERSONENBEZOGENEN DATEN
 
@@ -105,4 +101,41 @@ nicht ausdrücklich Ihr Einverständnis gegeben haben oder wir zur
 Herausgabe verpflichtet sind, beispielsweise aufgrund einer
 gerichtlichen oder behördlichen Anordnung.
 
-**Stand Januar 2021**
+## 6. WELCHE DATEN GENAU WERDEN ERHOBEN?
+
+1. Wie eingangs beschrieben werden Daten zur Forschungszwecken, die sich auf die Umwelt des Datenaufnehmers beziehen, anonymisiert und analysiert. Dazu werden folgende Arten von Daten aufgenommen:
+
+### Standortdaten
+
+Standortdaten werden per Ortungsdienst, Kompass und Beschleunigungssensoren auf wenige Zentimeter genau
+ermittelt. Nur dies erlaubt eine genaue Zuordnung der Messdaten zu einem Straßenabschnitt.
+
+Die Positionsbestimmungen wird anhand folgender Daten gemacht:
+
+- Beschleunigung
+- Geschwindigkeit
+- Längen- und Breitengrade sowie Höhe über dem Meeresspiegel
+- Approximiertes Fortbewegungsmittel
+
+### Sensordaten
+
+Neben den eigentlichen Messwerte werden auch der Name vom Sensor inklusive Hersteller und die Genauigkeit übermittelt. Dies ermöglicht eine bessere wissenschaftliche Vergleichbarkeit und eine genauere Auswertung der Daten. Während des Trackings werden in hoher Abtastrate folgende Sensordaten ermittelt.
+
+#### Beschleunigungssensor
+
+Zur Ermittlung der Position und der Beschaffenheit des Untergrundes auf dem man Fahrrad fährt.
+
+#### Kompass
+
+Zur Ermittlung der Richtung und der Position des Nutzers.
+
+#### Gyroskop
+
+Zur Ermittlung der Lage des Telefons und zur Berechnung der echten "Ground-Bumpiness" (Straßenbeschaffenheit)
+
+### Telefonkennungen
+
+Es wird eine eindeutige App-Kennzahl generiert, die eine App Installation, den Messwerten zuordnet. Diese App-ID kann vom Nutzer zurückgesetzt werden. Diese Kennzahl macht Messwertereihen voneinander unterscheidbar.
+
+
+**Stand April 2021**
