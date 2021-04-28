@@ -130,6 +130,9 @@ public class SensorRecordService extends Service implements SensorEventListener 
         super.onDestroy();
         Toast.makeText(getBaseContext(), "tracking service stopped", Toast.LENGTH_LONG).show();
         notification.closeNotification();
+        if (mqttConnection != null) {
+            mqttConnection.close();
+        }
         if (bgGeo != null) {
             Log.d(TAG, "Will stop the location service");
             bgGeo.stop();

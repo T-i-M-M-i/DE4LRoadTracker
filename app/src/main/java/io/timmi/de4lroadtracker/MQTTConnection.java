@@ -53,6 +53,11 @@ public class MQTTConnection  implements SharedPreferences.OnSharedPreferenceChan
 
         clientId = clientId + System.currentTimeMillis();
         if(mqttAndroidClient != null) {
+            try {
+                mqttAndroidClient.disconnect().waitForCompletion();
+            } catch (MqttException e) {
+                Log.e(TAG, "Cannot disconnect MQTT client", e);
+            }
             mqttAndroidClient.close();
         }
 
@@ -170,12 +175,18 @@ public class MQTTConnection  implements SharedPreferences.OnSharedPreferenceChan
         }
     }
 
-    public void publishMessage(String publishMessage){
+    public boolean publishMessage(String publishMessage){
 
         //Log.d(TAG, publishMessage);
-        if(mqttAndroidClient == null || !mqttAndroidClient.isConnected()) {
-            System.err.println("no mqtt client available!");
-            return;
+        try {
+            if(mqttAndroidClient == null || !mqttAndroidClient.isConnected()) {
+                Log.e(TAG, "no mqtt client available!");
+                return false;
+            }
+        } catch(Exception e) {
+            //we once got an Illegal argument exception see  #18
+            Log.e(TAG,  "mqtt client error,  maybe  because in closing state", e);
+            return false;
         }
         try {
             MqttMessage message = new MqttMessage();
@@ -186,9 +197,10 @@ public class MQTTConnection  implements SharedPreferences.OnSharedPreferenceChan
                 addToHistory(mqttAndroidClient.getBufferedMessageCount() + " messages in buffer.");
             }
         } catch (MqttException e) {
-            System.err.println("Error Publishing: " + e.getMessage());
-            e.printStackTrace();
+            Log.e(TAG, "Error Publishing: ", e);
+            return false;
         }
+        return true;
     }
 
     /**
@@ -211,6 +223,17 @@ public class MQTTConnection  implements SharedPreferences.OnSharedPreferenceChan
         catch (Exception ex)
         {
             ex.printStackTrace();
+        }
+    }
+
+    public void close() {
+        if(mqttAndroidClient != null) {
+            try {
+                mqttAndroidClient.disconnect();
+            } catch (MqttException e) {
+                Log.e(TAG, "Cannot disconnect MQTT client", e);
+            }
+            //mqttAndroidClient.close();
         }
     }
 
