@@ -97,7 +97,7 @@ public class AggregatedSensorData {
         ListIterator<DE4LSensorEvent> valueIterator = sensorValues.listIterator();
         Long offsetInMS = null;
 
-        while (!valueIterator.hasNext()) {
+        while (valueIterator.hasNext()) {
             DE4LSensorEvent measurement = valueIterator.next();
             Sensor sensor = measurement.sensor;
             if(offsetInMS == null) {
