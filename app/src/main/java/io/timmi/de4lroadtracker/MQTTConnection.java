@@ -51,11 +51,6 @@ public class MQTTConnection  implements SharedPreferences.OnSharedPreferenceChan
 
         clientId = clientId + System.currentTimeMillis();
         if(mqttAndroidClient != null) {
-            try {
-                mqttAndroidClient.disconnect().waitForCompletion();
-            } catch (MqttException e) {
-                Log.e(TAG, "Cannot disconnect MQTT client", e);
-            }
             mqttAndroidClient.close();
         }
 
@@ -227,11 +222,10 @@ public class MQTTConnection  implements SharedPreferences.OnSharedPreferenceChan
     public void close() {
         if(mqttAndroidClient != null) {
             try {
-                mqttAndroidClient.disconnect();
-            } catch (MqttException e) {
-                Log.e(TAG, "Cannot disconnect MQTT client", e);
+                mqttAndroidClient.close();
+            } catch (Exception e) {
+                Log.e(TAG, "Cannot close MQTT client", e);
             }
-            //mqttAndroidClient.close();
         }
     }
 
