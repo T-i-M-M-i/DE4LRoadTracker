@@ -120,7 +120,7 @@ public class JsonSerializer {
             } catch (IndexOutOfBoundsException e) {
                 Log.e(TAG,"Index out of bound in min/max/average calculation", e);
             }
-            res.put("accelaration", valuesJSON);
+            res.put("acceleration", valuesJSON);
         }
         if(svMap.containsKey("light")) {
             AggregatedSensorValues sv = svMap.get("light");
