@@ -31,8 +31,12 @@ public class MQTTConnection  implements SharedPreferences.OnSharedPreferenceChan
 
 
     String clientId = "ExampleAndroidClient";
-    final String subscriptionTopic = "sensors/timmi/moo";
-    final String publishTopic = "sensors/timmi/test";
+    final String subscriptionTopic = BuildConfig.BUILD_TYPE.toLowerCase().equals("debug")
+            ? AppConstants.MQTT_SUBSCRIBE_TOPIC_DEBUG
+            : AppConstants.MQTT_SUBSCRIBE_TOPIC_PRODUCTION;
+    final String publishTopic = BuildConfig.BUILD_TYPE.toLowerCase().equals("debug")
+            ?  AppConstants.MQTT_PUBLISH_TOPIC_DEBUG
+            : AppConstants.MQTT_PUBLISH_TOPIC_PRODUCTION;
 
     public MQTTConnection(Context context, Context appContext) {
         settings = PreferenceManager.getDefaultSharedPreferences(context);
