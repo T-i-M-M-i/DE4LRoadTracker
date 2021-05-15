@@ -40,93 +40,11 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     @Nullable
     private MenuItem stopStartMenuItem = null;
 
-    @Nullable
-    private BackgroundGeolocation bgGeo;
-    @Nullable
-    private TSConfig config;
-
     public MainActivity() {
         //no instance
     }
 
-    private void startBG() {
-        if (bgGeo != null) {
-            bgGeo.start();
-        }
-    }
 
-    private void initializeBGLocation() {
-        bgGeo = BackgroundGeolocation.getInstance(getApplicationContext());
-        config = TSConfig.getInstance(getApplicationContext());
-
-        // Configure the SDK
-        TSConfig.Builder builder = config.updateWithBuilder()
-                .setDebug(settings.getBoolean("sound", false)) // Sound Fx / notifications during development
-                .setLogLevel(5) // Verbose logging during development
-                .setDesiredAccuracy(LocationRequest.PRIORITY_HIGH_ACCURACY)
-                .setDistanceFilter(2F)
-                .setStopTimeout(1L)
-                .setHeartbeatInterval(60)
-                .setStopOnTerminate(false)
-                .setForegroundService(true)
-                .setStartOnBoot(false);
-
-        String debugUrl = settings.getString("locationServiceUrl", "");
-
-        if (!debugUrl.isEmpty()) {
-            builder.setUrl(debugUrl);
-        }
-        builder.commit();
-
-        // Listen events
-        bgGeo.onLocation(new TSLocationCallback() {
-            @Override
-            public void onLocation(TSLocation location) {
-                Log.i(TAG, "[location] from Main Activity " + location.toJson());
-            }
-
-            @Override
-            public void onError(Integer code) {
-                Log.i(TAG, "[location] ERROR: " + code);
-            }
-        });
-
-        bgGeo.onMotionChange(new TSLocationCallback() {
-            @Override
-            public void onLocation(TSLocation tsLocation) {
-                Log.i(TAG, "[motionchange] " + tsLocation.toJson());
-            }
-
-            @Override
-            public void onError(Integer error) {
-                Log.i(TAG, "[motionchange] ERROR: " + error);
-            }
-        });
-
-        // Finally, signal #ready to the SDK.
-        bgGeo.ready(new TSCallback() {
-            @Override
-            public void onSuccess() {
-                Log.i(TAG, "[ready] success");
-                if (!config.getEnabled()) {
-                    // Start tracking immediately (if not already).
-                } else {
-                    Log.d(TAG, "[ready] location services config tells it's already enabled, nevertheless we'll start the service again.");
-                }
-                try {
-                    bgGeo.start();
-                } catch (Exception e) {
-                    Log.e(TAG, "cannot start background location tracker" + e.getMessage(), e);
-                }
-            }
-
-            @Override
-            public void onFailure(String error) {
-                Log.i(TAG, "[ready] FAILURE: " + error);
-            }
-        });
-
-    }
     private void askAndroid10Perm()
     {
         if (Build.VERSION.SDK_INT >= 23) {
@@ -169,7 +87,6 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         settings.registerOnSharedPreferenceChangeListener(this);
         updateView();
         askAndroid10Perm();
-        initializeBGLocation();
         if(!privacyAgreementAccepted()) {
             startActivity(new Intent(this, PrivacyAgreementActivity.class));
         }
@@ -210,7 +127,6 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     }
 
     public void startTrackingService() {
-        startBG();
         startService(new Intent(getBaseContext(), SensorRecordService.class));
         if(stopStartMenuItem != null) {
             stopStartMenuItem.setIcon(R.drawable.baseline_stop_black_48);
@@ -262,23 +178,6 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         Intent intent = new Intent(getBaseContext(), DebugActivity.class);
         startActivity(intent);
     }
-    private void updateTSDebugUrl(String debugUrl) {
-
-        if (config == null) {
-            return;
-        }
-        TSConfig.Builder builder = config.updateWithBuilder();
-        builder.setUrl(debugUrl);
-        builder.commit();
-    }
-    private void updateTSSound(boolean withSound) {
-        if (config == null) {
-            return;
-        }
-        TSConfig.Builder builder = config.updateWithBuilder();
-        builder.setDebug(withSound); // Sound Fx / notifications during development
-        builder.commit();
-    }
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
@@ -286,12 +185,6 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
             case "distanceMeterTracked":
             case "messagesDelivered":
                 updateView();
-                break;
-            case "sound":
-                updateTSSound(settings.getBoolean("sound", false));
-                break;
-            case "locationServiceUrl":
-                updateTSDebugUrl(settings.getString("locationServiceUrl", ""));
                 break;
             default:
         }

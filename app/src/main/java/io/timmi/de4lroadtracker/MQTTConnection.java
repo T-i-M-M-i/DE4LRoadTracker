@@ -111,9 +111,9 @@ public class MQTTConnection  implements SharedPreferences.OnSharedPreferenceChan
                     addToHistory("Connected to: " + String.valueOf( asyncActionToken.isComplete()));
                     DisconnectedBufferOptions disconnectedBufferOptions = new DisconnectedBufferOptions();
                     disconnectedBufferOptions.setBufferEnabled(true);
-                    disconnectedBufferOptions.setBufferSize(100);
-                    disconnectedBufferOptions.setPersistBuffer(false);
-                    disconnectedBufferOptions.setDeleteOldestMessages(false);
+                    disconnectedBufferOptions.setBufferSize(AppConstants.MQTT_BUFFER_SIZE);
+                    disconnectedBufferOptions.setPersistBuffer(AppConstants.MQTT_PERSIST_BUFFER);
+                    disconnectedBufferOptions.setDeleteOldestMessages(true);
                     mqttAndroidClient.setBufferOpts(disconnectedBufferOptions);
                     subscribeToTopic();
                 }

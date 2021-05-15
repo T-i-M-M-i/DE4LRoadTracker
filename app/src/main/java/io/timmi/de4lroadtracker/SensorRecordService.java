@@ -28,13 +28,12 @@ import java.util.List;
 
 import io.timmi.de4lroadtracker.helper.JsonInfoBuilder;
 import io.timmi.de4lroadtracker.helper.JsonSerializer;
+import io.timmi.de4lroadtracker.helper.TSLocationWrapper;
 import io.timmi.de4lroadtracker.helper.TrackerIndicatorNotification;
 import io.timmi.de4lroadtracker.model.DE4LSensorEvent;
 
 public class SensorRecordService extends Service implements SensorEventListener {
     private static String TAG = "DE4SensorRecordService";
-    @Nullable
-    private BackgroundGeolocation bgGeo = null;
     @Nullable
     private MQTTConnection mqttConnection = null;
     private List<DE4LSensorEvent> sensorEventQueue = new LinkedList<>();
@@ -45,6 +44,9 @@ public class SensorRecordService extends Service implements SensorEventListener 
     private TrackerIndicatorNotification notification = new TrackerIndicatorNotification(this);
     @Nullable
     private Location previousLocation = null;
+
+    @Nullable
+    private TSLocationWrapper locationService = null;
 
     private void clearSensorData() {
         sensorEventQueue = new LinkedList<DE4LSensorEvent>();
@@ -89,10 +91,10 @@ public class SensorRecordService extends Service implements SensorEventListener 
         setupSensors();
 
         mqttConnection = new MQTTConnection(this, getApplicationContext());
+        locationService = new TSLocationWrapper(getApplicationContext());
 
         // Get a reference to the SDK
-        bgGeo = BackgroundGeolocation.getInstance(getApplicationContext());
-        bgGeo.onLocation(new TSLocationCallback() {
+        locationService.bgGeo.onLocation(new TSLocationCallback() {
             @Override
             public void onLocation(TSLocation location) {
                 if(previousLocation != null) {
@@ -123,6 +125,7 @@ public class SensorRecordService extends Service implements SensorEventListener 
                 Log.i(TAG, "[location] ERROR: " + code);
             }
         });
+        locationService.startBG();
     }
 
     @Override
@@ -133,9 +136,9 @@ public class SensorRecordService extends Service implements SensorEventListener 
         if (mqttConnection != null) {
             mqttConnection.close();
         }
-        if (bgGeo != null) {
+        if (locationService != null) {
             Log.d(TAG, "Will stop the location service");
-            bgGeo.stop();
+            locationService.stopBG();
             //bgGeo.getCount()
         }
     }
