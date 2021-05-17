@@ -19,6 +19,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <!-- react-native-background-geolocation licence  -->
+        <meta-data android:name="com.transistorsoft.locationmanager.license" android:value="${TRANSISTORSOFT_LOCATIONMANAGER_LICENSE}" />
+
         <activity
             android:name=".PrivacyAgreementActivity"
             ></activity>

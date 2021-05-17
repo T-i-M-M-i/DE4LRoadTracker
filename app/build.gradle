@@ -12,6 +12,7 @@ android {
         versionName "0.1.4"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        manifestPlaceholders["TRANSISTORSOFT_LOCATIONMANAGER_LICENSE"] = "$System.env.TRANSISTORSOFT_LOCATIONMANAGER_LICENSE"
     }
 
     buildTypes {
