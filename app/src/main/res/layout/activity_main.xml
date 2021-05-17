@@ -15,6 +15,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="20dp"
         android:text="@string/thank_you" />
+
     <TextView
         android:id="@+id/privacyHint"
         android:layout_width="match_parent"
@@ -29,11 +30,11 @@
         android:text="@string/you_contributed"
         android:textSize="18sp" />
 
-     <LinearLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center">
+        android:gravity="center"
+        android:orientation="horizontal">
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/addGallery"

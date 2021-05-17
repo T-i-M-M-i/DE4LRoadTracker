@@ -48,6 +48,8 @@
     <string name="close">close</string>
     <string name="cancel">cancel</string>
     <string name="proceed">proceed</string>
+    <string name="password">password</string>
+    <string name="passwordAlert">please enter the password for the message publishing</string>
 
     <string name="locationUsageAlertMessage">This app collects location data to assign sensor data to
         a given point in space-time even when the app is closed or not in use, as long as you are in record mode.

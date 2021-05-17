@@ -48,6 +48,8 @@
     <string name="close">schließen</string>
     <string name="cancel">abbrechen</string>
     <string name="proceed">fortfahren</string>
+    <string name="password">Passwort</string>
+    <string name="passwordAlert">Bitte gib das Passwort zur Nachrichtenübermittlung ein.</string>
 
     <string name="locationUsageAlertMessage">Diese Anwendung sammelt Ortsdaten um jedem Sensorwert eine
         Koordinate im Raum-Zeit-Kontinuum zuordnen zu können, selbst wenn die App im Hintergrund ist aber nur solange die Aufnahme läuft.

@@ -16,13 +16,10 @@
             android:singleLine="true"
             app:defaultValue="timmi-pub"
             android:title="Username" />
-        <EditTextPreference
+        <io.timmi.de4lroadtracker.PasswordPreference
             android:defaultValue=""
             android:key="mqttPW"
-            android:selectAllOnFocus="true"
-            android:singleLine="true"
-            app:defaultValue=""
-            android:inputType="textPassword"
+            android:layout="@layout/password_entry_view"
             android:title="Password" />
 
     </PreferenceCategory>

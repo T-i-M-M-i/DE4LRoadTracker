@@ -2,6 +2,7 @@ package io.timmi.de4lroadtracker;
 
 import android.Manifest;
 import android.app.ActivityManager;
+import androidx.appcompat.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -14,6 +15,7 @@ import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import com.google.android.material.textfield.TextInputEditText;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
@@ -40,6 +42,32 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         //no instance
     }
 
+    private void showPasswordAlertIfNoPassword(final Runnable proceedTask) {
+        if (settings.getString("mqttPW", "").isEmpty()) {
+            new MaterialAlertDialogBuilder(this)
+                    .setMessage(R.string.passwordAlert)
+                    .setView(R.layout.password_entry_view)
+                    .setPositiveButton(R.string.proceed, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            String password = ((TextInputEditText) ((AlertDialog) dialogInterface).findViewById(R.id.editMqttPW)).getText().toString();
+                            settings.edit()
+                                    .putString("mqttPW", password)
+                                    .apply();
+                            proceedTask.run();
+                        }
+                    })
+                    .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                        }
+                    })
+                    .show();
+        } else {
+            proceedTask.run();
+        }
+    }
+
     private void showDialogIfNoLocationPermission(final Runnable proceedTask) {
         boolean canAccessLocation = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED;
         if (!canAccessLocation) {
@@ -53,7 +81,8 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                     })
                     .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                         @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {}
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                        }
                     })
                     .show();
         } else {
@@ -145,16 +174,21 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     }
 
     public void startTrackingService() {
-        showDialogIfNoLocationPermission(new Runnable() {
+        showPasswordAlertIfNoPassword(new Runnable() {
             @Override
             public void run() {
-                startService(new Intent(getBaseContext(), SensorRecordService.class));
-                if (stopStartMenuItem != null) {
-                    stopStartMenuItem.setIcon(R.drawable.baseline_stop_black_48);
-                    stopStartMenuItem.setTitle(R.string.stop_service);
-                }
-                //moveTaskToBack(true);
-                //finish();
+                showDialogIfNoLocationPermission(new Runnable() {
+                    @Override
+                    public void run() {
+                        startService(new Intent(getBaseContext(), SensorRecordService.class));
+                        if (stopStartMenuItem != null) {
+                            stopStartMenuItem.setIcon(R.drawable.baseline_stop_black_48);
+                            stopStartMenuItem.setTitle(R.string.stop_service);
+                        }
+                        //moveTaskToBack(true);
+                        //finish();
+                    }
+                });
             }
         });
     }
