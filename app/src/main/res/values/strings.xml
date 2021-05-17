@@ -45,4 +45,10 @@
     <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
     <string name="title_activity_privacy_agreement">PrivacyAgreementActivity</string>
     <string name="close">close</string>
+    <string name="cancel">cancel</string>
+    <string name="proceed">proceed</string>
+
+    <string name="locationUsageAlertMessage">This app collects location data to assign sensor data to
+        a given point in space-time even when the app is closed or not in use, as long as you are in record mode.
+        Without the exact location, the measurements would be just random noise, unsuitable for this research project. </string>
 </resources>

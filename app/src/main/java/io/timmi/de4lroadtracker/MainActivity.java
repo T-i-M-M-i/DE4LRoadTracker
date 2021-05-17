@@ -3,6 +3,7 @@ package io.timmi.de4lroadtracker;
 import android.Manifest;
 import android.app.ActivityManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -24,10 +25,11 @@ import io.timmi.de4lroadtracker.helper.Md5Builder;
 import io.timmi.de4lroadtracker.helper.RawResourceLoader;
 import io.timmi.de4lroadtracker.helper.TrackerIndicatorNotification;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+
 public class MainActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
     private static final String TAG = "DE4LMainActivity";
     public static final String HISTORY_MESSAGE_BROADCAST = "io.timmi.de4lroadtracker.historymessagebroadcast";
-    public static final String BUFFER_STATUS_BROADCAST = "io.timmi.de4lroadtracker.bufferstatusbroadcast";
     private static final int REQUEST_CODE_OPEN_DOCUMENT_TREE = 100;
     private SharedPreferences settings;
     @Nullable
@@ -37,14 +39,37 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         //no instance
     }
 
+    private void showDialogIfNoLocationPermission(final Runnable proceedTask) {
+        boolean canAccessLocation = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED;
+        if (!canAccessLocation) {
+            new MaterialAlertDialogBuilder(this)
+                    .setMessage(R.string.locationUsageAlertMessage)
+                    .setPositiveButton(R.string.proceed, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            proceedTask.run();
+                        }
+                    })
+                    .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
 
-    private void askAndroid10Perm()
-    {
+                                }
+                            }
+
+                    )
+                    .show();
+        } else {
+            proceedTask.run();
+        }
+    }
+
+    private void askAndroid10Perm() {
         if (Build.VERSION.SDK_INT >= 23) {
             int result = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
             if (result != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this,
-            new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_CODE_OPEN_DOCUMENT_TREE);
+                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_CODE_OPEN_DOCUMENT_TREE);
             }
         }
     }
@@ -63,10 +88,11 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     private boolean privacyAgreementAccepted() {
         String agreementText = RawResourceLoader.loadText(R.raw.privacy, this);
         SharedPreferences sharedPreferences = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this);
-        if(sharedPreferences.contains("agreedPrivacyMD5") && agreementText != null) {
+        if (sharedPreferences.contains("agreedPrivacyMD5") && agreementText != null) {
             try {
                 return Md5Builder.md5(agreementText).equals(sharedPreferences.getString("agreedPrivacyMD5", ""));
-            } catch (Exception e) { }
+            } catch (Exception e) {
+            }
         }
         return false;
 
@@ -80,7 +106,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         settings.registerOnSharedPreferenceChangeListener(this);
         updateView();
         askAndroid10Perm();
-        if(!privacyAgreementAccepted()) {
+        if (!privacyAgreementAccepted()) {
             startActivity(new Intent(this, PrivacyAgreementActivity.class));
         }
     }
@@ -120,18 +146,23 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     }
 
     public void startTrackingService() {
-        startService(new Intent(getBaseContext(), SensorRecordService.class));
-        if(stopStartMenuItem != null) {
-            stopStartMenuItem.setIcon(R.drawable.baseline_stop_black_48);
-            stopStartMenuItem.setTitle(R.string.stop_service);
-        }
-        //moveTaskToBack(true);
-        //finish();
+        showDialogIfNoLocationPermission(new Runnable() {
+            @Override
+            public void run() {
+                startService(new Intent(getBaseContext(), SensorRecordService.class));
+                if (stopStartMenuItem != null) {
+                    stopStartMenuItem.setIcon(R.drawable.baseline_stop_black_48);
+                    stopStartMenuItem.setTitle(R.string.stop_service);
+                }
+                //moveTaskToBack(true);
+                //finish();
+            }
+        });
     }
 
     public void stopTrackingService() {
         stopService(new Intent(getBaseContext(), SensorRecordService.class));
-        if(stopStartMenuItem != null) {
+        if (stopStartMenuItem != null) {
             stopStartMenuItem.setIcon(R.drawable.baseline_not_started_black_48);
             stopStartMenuItem.setTitle(R.string.start_service);
         }
