@@ -19,13 +19,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import com.google.android.gms.location.LocationRequest;
-import com.transistorsoft.locationmanager.adapter.BackgroundGeolocation;
-import com.transistorsoft.locationmanager.adapter.TSConfig;
-import com.transistorsoft.locationmanager.adapter.callback.TSCallback;
-import com.transistorsoft.locationmanager.adapter.callback.TSLocationCallback;
-import com.transistorsoft.locationmanager.location.TSLocation;
-
 import io.timmi.de4lroadtracker.activity.DebugActivity;
 import io.timmi.de4lroadtracker.helper.Md5Builder;
 import io.timmi.de4lroadtracker.helper.RawResourceLoader;
