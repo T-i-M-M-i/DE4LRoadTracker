@@ -37,6 +37,7 @@
         von Straßen und Fahrradweg-Daten unterstützt. Die Messwerte können dabei behilflich sein innerstädtische
         Verkehrsplanung fahrradfreundlicher zu gestalten.
     </string>
+    <string name="privacy_hint">Beachte auch unsere <a href="https://t-i-m-m-i.github.io/privacy-de4l.html">Datenschutzerklärung</a>. </string>i
     <string name="distance">Strecke</string>
     <string name="waypoint">Wegpunkt</string>
     <string name="waypoints">Wegpunkte</string>

@@ -10,6 +10,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -51,13 +52,9 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                         }
                     })
                     .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialogInterface, int i) {
-
-                                }
-                            }
-
-                    )
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {}
+                    })
                     .show();
         } else {
             proceedTask.run();
@@ -104,6 +101,8 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         setContentView(R.layout.activity_main);
         settings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         settings.registerOnSharedPreferenceChangeListener(this);
+        ((TextView) findViewById(R.id.firstParagraph)).setMovementMethod(LinkMovementMethod.getInstance());
+        ((TextView) findViewById(R.id.privacyHint)).setMovementMethod(LinkMovementMethod.getInstance());
         updateView();
         askAndroid10Perm();
         if (!privacyAgreementAccepted()) {

@@ -10,13 +10,17 @@
     tools:context=".MainActivity">
 
     <TextView
-        android:id="@+id/textView2"
+        android:id="@+id/firstParagraph"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="20dp"
-        android:autoLink="all"
-        android:linksClickable="true"
         android:text="@string/thank_you" />
+    <TextView
+        android:id="@+id/privacyHint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
+        android:text="@string/privacy_hint" />
 
     <TextView
         android:id="@+id/textView"

@@ -37,6 +37,7 @@
     at building a data corpus of german street and bike-lanes, which will support solutions
         for more cyclist friendly traffic infrastructure in cities.
     </string>
+    <string name="privacy_hint">Regarding your privacy see our <a href="https://t-i-m-m-i.github.io/privacy-de4l.html">privacy agreement</a>. </string>i
     <string name="distance">tracked length</string>
     <string name="waypoint">Waypoint</string>
     <string name="waypoints">Waypoints</string>
