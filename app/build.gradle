@@ -8,8 +8,8 @@ android {
         applicationId "io.timmi.de4lroadtracker"
         minSdkVersion 21
         targetSdkVersion 29
-        versionCode 9
-        versionName "0.1.4"
+        versionCode 10
+        versionName "0.1.5"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         manifestPlaceholders["TRANSISTORSOFT_LOCATIONMANAGER_LICENSE"] = "$System.env.TRANSISTORSOFT_LOCATIONMANAGER_LICENSE"
