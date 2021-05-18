@@ -28,6 +28,7 @@ public class MQTTConnection  implements SharedPreferences.OnSharedPreferenceChan
     MqttAndroidClient mqttAndroidClient;
     @Nullable
     private Context appContext = null;
+    private Boolean subscriptionEnabled = true;
 
 
     String clientId = "ExampleAndroidClient";
@@ -45,6 +46,11 @@ public class MQTTConnection  implements SharedPreferences.OnSharedPreferenceChan
         this.appContext = appContext;
         connectMqtt();
 
+    }
+
+    public MQTTConnection(Context context, Context appContext, Boolean withSubscriptionEnabled) {
+        subscriptionEnabled = withSubscriptionEnabled;
+        new MQTTConnection(context, appContext);
     }
 
 
@@ -144,6 +150,8 @@ public class MQTTConnection  implements SharedPreferences.OnSharedPreferenceChan
     }
 
     public void subscribeToTopic(){
+        if(!subscriptionEnabled)
+            return;
         try {
             mqttAndroidClient.subscribe(subscriptionTopic, 0, null, new IMqttActionListener() {
                 @Override
