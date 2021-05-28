@@ -1,7 +1,6 @@
 package io.timmi.de4lroadtracker;
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -19,6 +18,8 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
+import io.timmi.de4lroadtracker.helper.DebugChannel;
+
 public class MQTTConnection  implements SharedPreferences.OnSharedPreferenceChangeListener {
 
 
@@ -28,21 +29,27 @@ public class MQTTConnection  implements SharedPreferences.OnSharedPreferenceChan
     MqttAndroidClient mqttAndroidClient;
     @Nullable
     private Context appContext = null;
-    private Boolean subscriptionEnabled = true;
+    private boolean subscriptionEnabled = true;
+    private boolean serviceShouldStop = false;
 
 
     String clientId = "ExampleAndroidClient";
-    final String subscriptionTopic = BuildConfig.BUILD_TYPE.toLowerCase().equals("debug")
-            ? AppConstants.MQTT_SUBSCRIBE_TOPIC_DEBUG
-            : AppConstants.MQTT_SUBSCRIBE_TOPIC_PRODUCTION;
-    final String publishTopic = BuildConfig.BUILD_TYPE.toLowerCase().equals("debug")
-            ?  AppConstants.MQTT_PUBLISH_TOPIC_DEBUG
-            : AppConstants.MQTT_PUBLISH_TOPIC_PRODUCTION;
+    private  String publishTopic = AppConstants.MQTT_PUBLISH_TOPIC_DEBUG;
+    private String  subscriptionTopic =  AppConstants.MQTT_SUBSCRIBE_TOPIC_DEBUG;
 
     public MQTTConnection(Context context, Context appContext) {
         settings = PreferenceManager.getDefaultSharedPreferences(context);
         settings.registerOnSharedPreferenceChangeListener(this);
 
+        boolean useDebugTopic = settings.getBoolean("useMqttDebugTopic",  BuildConfig.BUILD_TYPE.toLowerCase().equals("debug"));
+        publishTopic = useDebugTopic
+                ?  AppConstants.MQTT_PUBLISH_TOPIC_DEBUG
+                : AppConstants.MQTT_PUBLISH_TOPIC_PRODUCTION;
+        subscriptionTopic = useDebugTopic
+                ?  AppConstants.MQTT_SUBSCRIBE_TOPIC_DEBUG
+                : AppConstants.MQTT_SUBSCRIBE_TOPIC_PRODUCTION;
+
+        Log.i(TAG, "will publish to topic " + publishTopic);
         this.appContext = appContext;
         connectMqtt();
 
@@ -57,6 +64,9 @@ public class MQTTConnection  implements SharedPreferences.OnSharedPreferenceChan
 
     private void connectMqtt() {
 
+        //avoid connecting to mqtt if we are in stopping state... (could rarely happen if settings changed while stopping)
+        if(serviceShouldStop)
+            return;
         final String serverUri = settings.getString("mqttUrl", "");
 
         clientId = clientId + System.currentTimeMillis();
@@ -73,22 +83,22 @@ public class MQTTConnection  implements SharedPreferences.OnSharedPreferenceChan
             public void connectComplete(boolean reconnect, String serverURI) {
 
                 if (reconnect) {
-                    addToHistory("Reconnected to : " + serverURI);
+                    debugHistory("Reconnected to : " + serverURI);
                     // Because Clean Session is true, we need to re-subscribe
                     subscribeToTopic();
                 } else {
-                    addToHistory("Connected to: " + serverURI);
+                    debugHistory("Connected to: " + serverURI);
                 }
             }
 
             @Override
             public void connectionLost(Throwable cause) {
-                addToHistory("The Connection was lost.");
+                debugHistory("The Connection was lost.");
             }
 
             @Override
             public void messageArrived(String topic, MqttMessage message) throws Exception {
-                addToHistory("Incoming message: " + new String(message.getPayload()));
+                debugHistory("Incoming message: " + new String(message.getPayload()));
             }
 
             @Override
@@ -118,7 +128,7 @@ public class MQTTConnection  implements SharedPreferences.OnSharedPreferenceChan
             mqttAndroidClient.connect(mqttConnectOptions, null, new IMqttActionListener() {
                 @Override
                 public void onSuccess(IMqttToken asyncActionToken) {
-                    addToHistory("Connected to: " + String.valueOf( asyncActionToken.isComplete()));
+                    debugHistory("Connected to: " + String.valueOf( asyncActionToken.isComplete()));
                     DisconnectedBufferOptions disconnectedBufferOptions = new DisconnectedBufferOptions();
                     disconnectedBufferOptions.setBufferEnabled(true);
                     disconnectedBufferOptions.setBufferSize(AppConstants.MQTT_BUFFER_SIZE);
@@ -130,7 +140,7 @@ public class MQTTConnection  implements SharedPreferences.OnSharedPreferenceChan
 
                 @Override
                 public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-                    addToHistory("Failed to connect to: " + serverUri);
+                    debugHistory("Failed to connect to: " + serverUri);
                 }
             });
 
@@ -143,10 +153,8 @@ public class MQTTConnection  implements SharedPreferences.OnSharedPreferenceChan
 
 
 
-    private void addToHistory(String mainText){
-        Log.d(TAG, "historyMessage: " + mainText);
-        sendHistoryBroadcast(mainText);
-
+    private void debugHistory(String mainText){
+        DebugChannel.sendHistoryBroadcast(appContext, TAG, mainText);
     }
 
     public void subscribeToTopic(){
@@ -156,12 +164,12 @@ public class MQTTConnection  implements SharedPreferences.OnSharedPreferenceChan
             mqttAndroidClient.subscribe(subscriptionTopic, 0, null, new IMqttActionListener() {
                 @Override
                 public void onSuccess(IMqttToken asyncActionToken) {
-                    addToHistory("Subscribed!");
+                    debugHistory("Subscribed!");
                 }
 
                 @Override
                 public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-                    addToHistory("Failed to subscribe");
+                    debugHistory("Failed to subscribe");
                 }
             });
 
@@ -197,9 +205,9 @@ public class MQTTConnection  implements SharedPreferences.OnSharedPreferenceChan
             MqttMessage message = new MqttMessage();
             message.setPayload(publishMessage.getBytes());
             mqttAndroidClient.publish(publishTopic, message);
-            addToHistory("Message Published");
+            debugHistory("Message Published");
             if(!mqttAndroidClient.isConnected()){
-                addToHistory(mqttAndroidClient.getBufferedMessageCount() + " messages in buffer.");
+                debugHistory(mqttAndroidClient.getBufferedMessageCount() + " messages in buffer.");
             }
         } catch (MqttException e) {
             Log.e(TAG, "Error Publishing: ", e);
@@ -208,26 +216,10 @@ public class MQTTConnection  implements SharedPreferences.OnSharedPreferenceChan
         return true;
     }
 
-    /**
-     * This method is responsible to send broadcast to specific Action
-     * */
-    private void sendHistoryBroadcast(String message)
-    {
-        try
-        {
-            Intent broadCastIntent = new Intent();
-            broadCastIntent.setAction(MainActivity.HISTORY_MESSAGE_BROADCAST);
-            broadCastIntent.putExtra("historyMessage", message);
 
-            if (appContext != null) {
-                Log.i("MQTT", "[sendBroadcast]");
-                appContext.sendBroadcast(broadCastIntent);
-            }
-
-        }
-        catch (Exception ex)
-        {
-            ex.printStackTrace();
+    public void disconnect(IMqttActionListener actionListener) throws MqttException {
+        if(mqttAndroidClient != null) {
+            mqttAndroidClient.disconnect(appContext, actionListener);
         }
     }
 
