@@ -34,6 +34,9 @@
             app:title="@string/location_service_url"
             app:defaultValue=""
             app:useSimpleSummaryProvider="true" />
+        <SwitchPreferenceCompat
+            android:key="useMqttDebugTopic"
+            android:title="publish to sensors/timmi/test" />
 
     </PreferenceCategory>
 
