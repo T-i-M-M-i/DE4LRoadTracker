@@ -3,13 +3,19 @@ package io.timmi.de4lroadtracker;
 import android.Manifest;
 import android.app.ActivityManager;
 import androidx.appcompat.app.AlertDialog;
+
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.os.Message;
+import android.os.Messenger;
 import android.preference.PreferenceManager;
 import android.text.method.LinkMovementMethod;
 import android.util.Log;
@@ -159,6 +165,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        doUnbindService();
         settings.unregisterOnSharedPreferenceChangeListener(this);
         //unregisterReceiver();
     }
@@ -185,6 +192,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                             stopStartMenuItem.setIcon(R.drawable.baseline_stop_black_48);
                             stopStartMenuItem.setTitle(R.string.stop_service);
                         }
+                        doBindService();
                         //moveTaskToBack(true);
                         //finish();
                     }
@@ -194,11 +202,21 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     }
 
     public void stopTrackingService() {
-        stopService(new Intent(getBaseContext(), SensorRecordService.class));
-        if (stopStartMenuItem != null) {
-            stopStartMenuItem.setIcon(R.drawable.baseline_not_started_black_48);
-            stopStartMenuItem.setTitle(R.string.start_service);
+
+        if(mIsBound && mService != null) {
+            try {
+                mService.send(Message.obtain(null,
+                        SensorRecordService.STOP_SERVICE_MESSAGE));
+                doUnbindService();
+                if (stopStartMenuItem != null) {
+                    stopStartMenuItem.setIcon(R.drawable.baseline_not_started_black_48);
+                    stopStartMenuItem.setTitle(R.string.start_service);
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Cannot stop service, message could not be sent");
+            }
         }
+        //stopService(new Intent(getBaseContext(), SensorRecordService.class));
     }
 
     @Override
@@ -246,4 +264,33 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
             default:
         }
     }
+
+
+    Messenger mService = null;
+    boolean mIsBound;
+
+    private ServiceConnection mConnection = new ServiceConnection() {
+        public void onServiceConnected(ComponentName className,
+                                       IBinder service) {
+            mService = new Messenger(service);
+        }
+
+        public void onServiceDisconnected(ComponentName className) {
+            mService = null;
+        }
+    };
+
+    void doBindService() {
+        bindService(new Intent(this,
+                SensorRecordService.class), mConnection, Context.BIND_AUTO_CREATE);
+        mIsBound = true;
+    }
+
+    void doUnbindService() {
+        if (mIsBound) {
+            unbindService(mConnection);
+            mIsBound = false;
+        }
+    }
+
 }
