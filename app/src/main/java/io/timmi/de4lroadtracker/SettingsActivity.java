@@ -5,6 +5,8 @@ import android.os.Bundle;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.PreferenceFragmentCompat;
+import androidx.preference.SwitchPreference;
+import androidx.preference.SwitchPreferenceCompat;
 
 public class SettingsActivity extends AppCompatActivity {
 
@@ -26,6 +28,11 @@ public class SettingsActivity extends AppCompatActivity {
         @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey);
+            SwitchPreferenceCompat mqttTopicSwitch = (SwitchPreferenceCompat) findPreference("useMqttDebugTopic");
+            if(mqttTopicSwitch != null) {
+                boolean useDebug = BuildConfig.BUILD_TYPE.toLowerCase().equals("debug");
+                mqttTopicSwitch.setDefaultValue(useDebug);
+            }
         }
     }
 }
