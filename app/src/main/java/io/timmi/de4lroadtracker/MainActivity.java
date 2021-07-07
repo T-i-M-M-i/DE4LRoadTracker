@@ -203,7 +203,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
     public void stopTrackingService() {
 
-        if(mIsBound && mService != null) {
+        if( mService != null ) {
             try {
                 mService.send(Message.obtain(null,
                         SensorRecordService.STOP_SERVICE_MESSAGE));
