@@ -59,7 +59,7 @@ public class TSLocationWrapper implements SharedPreferences.OnSharedPreferenceCh
                 .setStopTimeout(1L)
                 .setHeartbeatInterval(60)
                 .setStopOnTerminate(true)
-                .setForegroundService(false)
+                .setForegroundService(true)
                 .setStartOnBoot(false);
 
         String debugUrl = settings.getString("locationServiceUrl", "");
