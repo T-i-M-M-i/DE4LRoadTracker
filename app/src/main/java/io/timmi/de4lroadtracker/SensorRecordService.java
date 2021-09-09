@@ -31,6 +31,9 @@ import org.json.JSONObject;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.UUID;
 
 import io.timmi.de4lroadtracker.helper.DebugChannel;
 import io.timmi.de4lroadtracker.helper.JsonInfoBuilder;
@@ -42,8 +45,12 @@ import io.timmi.de4lroadtracker.model.DE4LSensorEvent;
 public class SensorRecordService extends Service implements SensorEventListener {
 
     public final static int STOP_SERVICE_MESSAGE = 1;
+    public static boolean isRunning = false;
 
     private static String TAG = "DE4SensorRecordService";
+
+    private final UUID uuid = UUID.randomUUID();
+
     @Nullable
     private MQTTConnection mqttConnection = null;
     private List<DE4LSensorEvent> sensorEventQueue = new LinkedList<>();
@@ -131,9 +138,32 @@ public class SensorRecordService extends Service implements SensorEventListener 
         settingsEditor.apply();
     }
 
+    private int addToServicesRunning(int number) {
+        SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        int previousServicesRunningCount = settings.getInt("servicesRunning", 0);
+        int servicesRunningCount =  previousServicesRunningCount + number;
+        SharedPreferences.Editor settingsEditor = settings.edit();
+        settingsEditor.putInt("servicesRunning", servicesRunningCount);
+        settingsEditor.apply();
+        return servicesRunningCount;
+    }
+
+    @Nullable
+    private Timer timer = null;
+
     public void onCreate() {
         super.onCreate();
         Toast.makeText(getBaseContext(), "tracking service started", Toast.LENGTH_SHORT).show();
+
+        isRunning = true;
+        addToServicesRunning(1);
+        timer = new Timer();
+        timer.scheduleAtFixedRate(new TimerTask(){
+            @Override
+            public void run(){
+                Log.i(TAG, "I am alive " + uuid.toString());
+            }
+        },0,1000);
 
         notification.setupNotifications();
         notification.showNotification();
@@ -184,6 +214,16 @@ public class SensorRecordService extends Service implements SensorEventListener 
     @Override
     public void onDestroy() {
         super.onDestroy();
+        Log.d(TAG, "onDestroy called");
+
+        if(timer != null) {
+            timer.cancel();
+            timer.purge();
+            timer = null;
+        }
+
+        isRunning = false;
+        addToServicesRunning(-1);
         Toast.makeText(getBaseContext(), "tracking service stopped", Toast.LENGTH_LONG).show();
         notification.closeNotification();
         //if (mqttConnection != null) {
@@ -195,6 +235,8 @@ public class SensorRecordService extends Service implements SensorEventListener 
             //bgGeo.getCount()
         }
     }
+
+
 
 
     private final float[] rotationInverted = new float[16];

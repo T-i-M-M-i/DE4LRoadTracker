@@ -115,6 +115,9 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         String distanceTracked =
                 String.valueOf(settings.getLong("distanceMeterTracked", 0) / 1000) + " km";
         distanceView.setText(distanceTracked);
+        TextView servicesRunningCount = (TextView) findViewById(R.id.servicesRunningCount);
+        String servicesRunningCountText = String.valueOf(settings.getInt("servicesRunning", 0));
+        servicesRunningCount.setText(servicesRunningCountText);
     }
 
     private boolean privacyAgreementAccepted() {
@@ -171,13 +174,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     }
 
     private boolean isMyServiceRunning(Class<?> serviceClass) {
-        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-            if (serviceClass.getName().equals(service.service.getClassName())) {
-                return true;
-            }
-        }
-        return false;
+        return SensorRecordService.isRunning;
     }
 
     public void startTrackingService() {
@@ -187,7 +184,11 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                 showDialogIfNoLocationPermission(new Runnable() {
                     @Override
                     public void run() {
-                        startService(new Intent(getBaseContext(), SensorRecordService.class));
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            startForegroundService(new Intent(getBaseContext(), SensorRecordService.class));
+                        } else {
+                            startService(new Intent(getBaseContext(), SensorRecordService.class));
+                        }
                         if (stopStartMenuItem != null) {
                             stopStartMenuItem.setIcon(R.drawable.baseline_stop_black_48);
                             stopStartMenuItem.setTitle(R.string.stop_service);
@@ -259,6 +260,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         switch (s) {
             case "distanceMeterTracked":
             case "messagesDelivered":
+            case "servicesRunning":
                 updateView();
                 break;
             default:

@@ -17,6 +17,14 @@
         android:text="@string/thank_you" />
 
     <TextView
+        android:id="@+id/servicesRunningCount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:text="10"
+        android:textSize="36sp" />
+
+    <TextView
         android:id="@+id/privacyHint"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
