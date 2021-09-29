@@ -36,6 +36,8 @@ import io.timmi.de4lroadtracker.helper.TrackerIndicatorNotification;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
+import io.timmi.de4lfilter.Filter;
+
 public class MainActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
     private static final String TAG = "DE4LMainActivity";
     public static final String HISTORY_MESSAGE_BROADCAST = "io.timmi.de4lroadtracker.historymessagebroadcast";
@@ -132,6 +134,8 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.i(TAG, Filter.filter("{data: []}"));
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         settings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
