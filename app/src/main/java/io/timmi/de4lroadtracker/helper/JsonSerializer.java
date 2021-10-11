@@ -134,7 +134,7 @@ public class JsonSerializer {
                 mObj.put("sensorId", sensor.getId());
             }*/
             mObj.put("value", new JSONArray(measurement.values));
-            mObj.put("timestamp", measurement.timestamp);
+            mObj.put("timestamp", AggregatedSensorData.eventTimeNanoToUnixTimeMS(measurement.timestamp, offsetInMS));
             measurementArray.put(mObj);
             res.put(measurement.key, measurementArray);
         }
