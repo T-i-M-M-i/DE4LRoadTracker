@@ -24,7 +24,7 @@ public class AggregatedSensorData {
      * @param eventTimeNanos the {@code SensorEvent.time} to be used to determine the time offset
      * @return the offset in milliseconds
      */
-    static long eventTimeOffset(final long eventTimeNanos) {
+    public static long eventTimeOffset(final long eventTimeNanos) {
         // Capture timestamps of event reporting time
         final long elapsedRealTimeMillis = SystemClock.elapsedRealtime();
         final long upTimeMillis = SystemClock.uptimeMillis();

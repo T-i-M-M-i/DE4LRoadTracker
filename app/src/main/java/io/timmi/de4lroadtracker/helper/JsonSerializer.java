@@ -8,6 +8,7 @@ import android.util.Log;
 import com.google.android.gms.location.DetectedActivity;
 import com.transistorsoft.locationmanager.location.TSLocation;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -15,10 +16,14 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.TimeZone;
 
+import io.timmi.de4lroadtracker.AggregatedSensorData;
 import io.timmi.de4lroadtracker.model.AggregatedSensorValues;
+import io.timmi.de4lroadtracker.model.DE4LSensorEvent;
 
 public class JsonSerializer {
 
@@ -103,6 +108,36 @@ public class JsonSerializer {
         if(sv.minVals.size() > index) res.put("minimum", sv.minVals.get(index));
         if(sv.maxVals.size() > index) res.put("maximum", sv.maxVals.get(index));
         if(sv.avgVals.size() > index) res.put("average", sv.avgVals.get(index));
+        return res;
+    }
+
+    public static JSONObject groupSensorDataToJSON(List<DE4LSensorEvent> sensorValues) throws JSONException {
+
+        JSONObject res = new JSONObject();
+        ListIterator<DE4LSensorEvent> valueIterator = sensorValues.listIterator();
+        Long offsetInMS = null;
+
+        while (valueIterator.hasNext()) {
+            DE4LSensorEvent measurement = valueIterator.next();
+            Sensor sensor = measurement.sensor;
+            if (offsetInMS == null) {
+                offsetInMS = AggregatedSensorData.eventTimeOffset(measurement.timestamp);
+            }
+            JSONArray measurementArray = res.optJSONArray(measurement.key);
+            if (measurementArray == null) {
+                measurementArray = new JSONArray();
+            }
+            JSONObject mObj = new JSONObject();
+            mObj.put("accuracy", measurement.accuracy);
+            /*mObj.put("sensor", sensor.getName());
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                mObj.put("sensorId", sensor.getId());
+            }*/
+            mObj.put("value", new JSONArray(measurement.values));
+            mObj.put("timestamp", measurement.timestamp);
+            measurementArray.put(mObj);
+            res.put(measurement.key, measurementArray);
+        }
         return res;
     }
 

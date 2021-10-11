@@ -3,6 +3,9 @@ package io.timmi.de4lroadtracker.model;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 
+import com.j256.ormlite.table.DatabaseTable;
+
+@DatabaseTable(tableName = "SensorEvent")
 public class DE4LSensorEvent {
 
     public String key;

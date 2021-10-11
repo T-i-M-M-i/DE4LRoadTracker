@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="io.timmi.de4lroadtracker">
+
     <!-- Permissions the Application Requires -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission
@@ -19,12 +20,13 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <!-- react-native-background-geolocation licence  -->
-        <meta-data android:name="com.transistorsoft.locationmanager.license" android:value="${TRANSISTORSOFT_LOCATIONMANAGER_LICENSE}" />
+        <service android:name=".SensorRecorder" />
+        <!-- react-native-background-geolocation licence -->
+        <meta-data
+            android:name="com.transistorsoft.locationmanager.license"
+            android:value="${TRANSISTORSOFT_LOCATIONMANAGER_LICENSE}" />
 
-        <activity
-            android:name=".PrivacyAgreementActivity"
-            ></activity>
+        <activity android:name=".PrivacyAgreementActivity" />
         <activity
             android:name=".activity.DebugActivity"
             android:label="@string/title_activity_debug"

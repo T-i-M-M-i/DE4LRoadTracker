@@ -2,6 +2,8 @@ package io.timmi.de4lroadtracker;
 
 import android.Manifest;
 import android.app.ActivityManager;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 
 import android.content.ComponentName;
@@ -13,15 +15,19 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
+import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+
 import com.google.android.material.textfield.TextInputEditText;
+
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
@@ -32,9 +38,18 @@ import androidx.core.content.ContextCompat;
 import io.timmi.de4lroadtracker.activity.DebugActivity;
 import io.timmi.de4lroadtracker.helper.Md5Builder;
 import io.timmi.de4lroadtracker.helper.RawResourceLoader;
+import io.timmi.de4lroadtracker.helper.TSLocationWrapper;
 import io.timmi.de4lroadtracker.helper.TrackerIndicatorNotification;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.smellycat.Durian;
+
+import org.json.JSONArray;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
     private static final String TAG = "DE4LMainActivity";
@@ -43,8 +58,10 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     private SharedPreferences settings;
     @Nullable
     private MenuItem stopStartMenuItem = null;
+    private TSLocationWrapper locationService = null;
 
     public MainActivity() {
+        System.out.println(Durian.add(40, 2));
         //no instance
     }
 
@@ -138,6 +155,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         settings.registerOnSharedPreferenceChangeListener(this);
         ((TextView) findViewById(R.id.firstParagraph)).setMovementMethod(LinkMovementMethod.getInstance());
         ((TextView) findViewById(R.id.privacyHint)).setMovementMethod(LinkMovementMethod.getInstance());
+        locationService = new TSLocationWrapper(getApplicationContext());
         updateView();
         askAndroid10Perm();
         if (!privacyAgreementAccepted()) {
@@ -150,7 +168,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         getMenuInflater().inflate(R.menu.activity_main, menu);
         MenuItem item = menu.findItem(R.id.menu_toggle);
         stopStartMenuItem = item;
-        if (isMyServiceRunning(SensorRecordService.class)) {
+        if (isMyServiceRunning(SensorRecorder.class)) {
             Log.i(TAG, "isMyServiceRunning = true");
             item.setIcon(R.drawable.baseline_stop_black_48);
             item.setTitle(R.string.stop_service);
@@ -187,7 +205,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                 showDialogIfNoLocationPermission(new Runnable() {
                     @Override
                     public void run() {
-                        startService(new Intent(getBaseContext(), SensorRecordService.class));
+                        startService(new Intent(getBaseContext(), SensorRecorder.class));
                         if (stopStartMenuItem != null) {
                             stopStartMenuItem.setIcon(R.drawable.baseline_stop_black_48);
                             stopStartMenuItem.setTitle(R.string.stop_service);
@@ -203,7 +221,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
     public void stopTrackingService() {
 
-        if( mService != null ) {
+        /*if( mService != null ) {
             try {
                 mService.send(Message.obtain(null,
                         SensorRecordService.STOP_SERVICE_MESSAGE));
@@ -215,8 +233,11 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
             } catch (Exception e) {
                 Log.e(TAG, "Cannot stop service, message could not be sent");
             }
-        }
-        //stopService(new Intent(getBaseContext(), SensorRecordService.class));
+        }*/
+        doUnbindService();
+        stopStartMenuItem.setIcon(R.drawable.baseline_not_started_black_48);
+        stopStartMenuItem.setTitle(R.string.start_service);
+        stopService(new Intent(getBaseContext(), SensorRecorder.class));
     }
 
     @Override
@@ -230,6 +251,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
             case TrackerIndicatorNotification.CLOSE_ACTION:
                 stopTrackingService();
                 break;
+            default:
         }
     }
 
@@ -242,7 +264,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     }
 
     public void toggleService(MenuItem item) {
-        if (isMyServiceRunning(SensorRecordService.class)) {
+        if (isMyServiceRunning(SensorRecorder.class)) {
             stopTrackingService();
         } else {
             startTrackingService();
@@ -265,7 +287,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         }
     }
 
-
+    final Messenger mMessenger = new Messenger(new IncomingMessageHandler());
     Messenger mService = null;
     boolean mIsBound;
 
@@ -273,6 +295,13 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         public void onServiceConnected(ComponentName className,
                                        IBinder service) {
             mService = new Messenger(service);
+            Message msg = Message.obtain(null, SensorRecorder.MSG_REGISTER_CLIENT);
+            msg.replyTo = mMessenger;
+            try {
+                mService.send(msg);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
         }
 
         public void onServiceDisconnected(ComponentName className) {
@@ -280,14 +309,59 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         }
     };
 
+
+    void buildDataPackageFromSensorsJSON(String filename) {
+        JSONArray locations = locationService.bgGeo.getLocations();
+        Log.d(TAG, "build data package" + filename);
+        File file = new File(filename.substring(0, filename.length() - 5) + "_locations.json");
+        FileOutputStream fOut = null;
+        try {
+            fOut = new FileOutputStream(file, true);
+            fOut.write(locations.toString().getBytes());
+            fOut.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        locationService.bgGeo.destroyLocations();
+    }
+
+    private class IncomingMessageHandler extends Handler {
+        @Override
+        public void handleMessage(@NonNull Message msg) {
+            switch (msg.what) {
+                case SensorRecorder.MSG_STORED_JSON_FILE:
+                    buildDataPackageFromSensorsJSON(msg.obj.toString());
+                    break;
+                default:
+                    super.handleMessage(msg);
+            }
+        }
+    }
+
     void doBindService() {
+        locationService.startBG();
+        if (locationService.bgGeo != null) {
+            locationService.bgGeo.destroyLocations();
+        }
         bindService(new Intent(this,
-                SensorRecordService.class), mConnection, Context.BIND_AUTO_CREATE);
+                SensorRecorder.class), mConnection, Context.BIND_AUTO_CREATE);
         mIsBound = true;
     }
 
     void doUnbindService() {
+        locationService.stopBG();
         if (mIsBound) {
+            try {
+                Message msg = Message.obtain(null,
+                        SensorRecorder.MSG_UNREGISTER_CLIENT);
+                msg.replyTo = mMessenger;
+                mService.send(msg);
+            } catch (RemoteException e) {
+                // There is nothing special we need to do if the service
+                // has crashed.
+            }
             unbindService(mConnection);
             mIsBound = false;
         }
