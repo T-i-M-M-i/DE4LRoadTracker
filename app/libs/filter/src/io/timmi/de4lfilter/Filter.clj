@@ -1,8 +1,10 @@
 (ns io.timmi.de4lfilter.Filter
   (:gen-class
      :name  io.timmi.de4lfilter.Filter
-     :methods [^:static [filter [String] String]]))
+     :methods [^:static [filter [String] String]])
+  (:require [io.timmi.de4lfilter.implementation :refer [invalid remove-around-slow]]))
 
-(defn -filter [json]
-  "TODO: till now this is only a mock"
-  json)
+(defn -filter [location-json]
+  (->> location-json
+       (remove invalid)
+       remove-around-slow))
