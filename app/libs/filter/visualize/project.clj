@@ -6,6 +6,7 @@
   :dependencies [[org.clojure/clojure "1.10.1"]  ;; spandex requires a not too deprecated version
                  [yogthos/config "1.1.8"]
                  [metosin/jsonista "0.3.4"]
+                 [clj-time "0.15.2"]
                  [cc.qbits/spandex "0.7.10"]]
   :source-paths ["src" "../src"]
   :main ^:skip-aot visualize.core)

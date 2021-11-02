@@ -1,6 +1,6 @@
 {
- :speed-limit 5
- :neighbourhood-radius 20
+ :speed-limit 5  ;; in km/h
+ :neighbourhood-radius 30  ;; in seconds
 
  :elastic-host "http://localhost:9200"
                ;"https://elasticsearch.timmi.johannesloetzsch.de"
