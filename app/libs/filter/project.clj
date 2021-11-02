@@ -5,5 +5,6 @@
             :url "https://www.eclipse.org/legal/epl-2.0/"}
   :dependencies [[org.clojure/clojure "1.8.0"]  ;; with Android as target, we may rely on Java 7, but not on Java 8
                  [yogthos/config "1.1.8"]
-                 [metosin/jsonista "0.3.4"]]
+                 [metosin/jsonista "0.3.4"]
+                 [clj-time "0.15.2"]] ;; on Android we can't rely on java.time (requires Java 8)
   :profiles {:uberjar {:aot :all}})
