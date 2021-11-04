@@ -1,9 +1,9 @@
 (ns io.timmi.de4lfilter.parse
-  (:require [jsonista.core :as j]
+  (:require [clojure.data.json :as json]
             [io.timmi.de4lfilter.time :refer [from-local-str]]))
 
 (defn parse [json:str]
-  (j/read-value json:str j/keyword-keys-object-mapper))
+  (json/read-str json:str :key-fn keyword))
 
 (defn transform_locations [orig]
   (let [coords (:coords orig)]

@@ -151,7 +151,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.i(TAG, Filter.filter("{data: []}"));
+        Log.i(TAG, Filter.filter("[]", "[]"));
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
