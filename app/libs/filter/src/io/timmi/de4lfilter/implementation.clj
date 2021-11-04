@@ -1,5 +1,9 @@
-(ns io.timmi.de4lfilter.implementation
-  (:require [config.core :refer [env]]))
+(ns io.timmi.de4lfilter.implementation)
+
+(def env {
+ :speed-limit 5  ;; in km/h
+ :neighbourhood-radius 30  ;; in seconds
+})  ;; mock yogthos/config
 
 (defn invalid [doc]
   (< (:speed doc) 0))

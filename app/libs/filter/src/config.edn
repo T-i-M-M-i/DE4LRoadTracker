@@ -1,9 +1,0 @@
-{
- :speed-limit 5  ;; in km/h
- :neighbourhood-radius 30  ;; in seconds
-
- :elastic-host "http://localhost:9200"
-               ;"https://elasticsearch.timmi.johannesloetzsch.de"
- ;:elastic-user "timmi"
- ;:elastic-password "store this in your .lein-env"
-}
