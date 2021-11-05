@@ -42,14 +42,17 @@ import io.timmi.de4lroadtracker.helper.TSLocationWrapper;
 import io.timmi.de4lroadtracker.helper.TrackerIndicatorNotification;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.smellycat.Durian;
 
 import org.json.JSONArray;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 
 import io.timmi.de4lfilter.Filter;
 
@@ -63,7 +66,6 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     private TSLocationWrapper locationService = null;
 
     public MainActivity() {
-        System.out.println(Durian.add(40, 2));
         //no instance
     }
 
@@ -149,9 +151,48 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
     }
 
+    private String readFileAsString(File file) {
+        StringBuilder lines = new StringBuilder();
+        try {
+            FileInputStream fileInputStream = new FileInputStream(file);
+            BufferedReader br = new BufferedReader(new InputStreamReader(fileInputStream, "ISO-8859-1"));
+
+            String line = "";
+            while ((line = br.readLine()) != null) {
+               lines.append(line);
+            }
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return lines.toString();
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.i(TAG, Filter.filter("[]", "[]"));
+        File dir = getExternalFilesDir(null);
+        if (dir.exists()) {
+            File[] files = dir.listFiles();
+            for (File file : files) {
+                String filename = file.getAbsolutePath();
+                File locationsFile = new File(filename.substring(0, filename.length() - 5) + "_locations.json");
+                if (locationsFile.exists()) {
+                    Log.i(TAG, locationsFile.getName());
+
+                    String locationsJson = readFileAsString(locationsFile);
+                    String sensorJson = readFileAsString(file);
+                    String resultJson = Filter.filter(locationsJson, sensorJson);
+
+                    Log.i(TAG, resultJson);
+                }
+            }
+        }
+
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
