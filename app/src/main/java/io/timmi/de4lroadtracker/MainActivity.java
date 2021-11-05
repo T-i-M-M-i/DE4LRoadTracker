@@ -174,7 +174,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.i(TAG, Filter.filter("[]", "[]"));
+        Log.i(TAG, Filter.filterMany("[[], []]", "[[], []]", "{}"));
         File dir = getExternalFilesDir(null);
         if (dir.exists()) {
             File[] files = dir.listFiles();
@@ -184,9 +184,9 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                 if (locationsFile.exists()) {
                     Log.i(TAG, locationsFile.getName());
 
-                    String locationsJson = readFileAsString(locationsFile);
-                    String sensorJson = readFileAsString(file);
-                    String resultJson = Filter.filter(locationsJson, sensorJson);
+                    String locationsJson = "[" + readFileAsString(locationsFile) + "," + readFileAsString(locationsFile) + "]";
+                    String sensorJson = "[" + readFileAsString(file) + "," + readFileAsString(file) + "]";
+                    String resultJson = Filter.filterMany(locationsJson, sensorJson, "{}");
 
                     Log.i(TAG, resultJson);
                 }

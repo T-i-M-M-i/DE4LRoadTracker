@@ -11,7 +11,3 @@
                    :lat (:latitude coords)}
         :speed (:speed coords)
         :tmp {:timestamp (from-local-str (:timestamp orig))}}))
-
-(defn parse+transform_locations [json:str]
-  (->> (parse json:str)
-       (map transform_locations)))
