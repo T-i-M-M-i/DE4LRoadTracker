@@ -7,6 +7,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -33,6 +34,7 @@ import io.timmi.de4lroadtracker.helper.JsonSerializer;
 import io.timmi.de4lroadtracker.helper.TrackerIndicatorNotification;
 import io.timmi.de4lroadtracker.model.AggregatedSensorValues;
 import io.timmi.de4lroadtracker.model.DE4LSensorEvent;
+import io.timmi.de4lroadtracker.scheduler.Utils;
 
 public class SensorRecorder extends Service implements SensorEventListener {
 
@@ -54,6 +56,14 @@ public class SensorRecorder extends Service implements SensorEventListener {
     public SensorRecorder() {
     }
 
+    private void startJob() {
+        Log.v(TAG, "StartJob starting");
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+            Utils.setJobScheduler(getApplicationContext());
+        else
+            Utils.setAlarmManager(getApplicationContext());
+    }
+
     public void onCreate() {
         super.onCreate();
         Toast.makeText(getBaseContext(), "tracking service started", Toast.LENGTH_SHORT).show();
@@ -62,6 +72,7 @@ public class SensorRecorder extends Service implements SensorEventListener {
         notification.showNotification();
 
         setupSensors();
+        startJob();
     }
 
     @Override

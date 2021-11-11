@@ -5,6 +5,7 @@
 
     <!-- Permissions the Application Requires -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         tools:node="replace" />
@@ -20,8 +21,6 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <service android:name=".SensorRecorder" />
-        <!-- react-native-background-geolocation licence -->
         <meta-data
             android:name="com.transistorsoft.locationmanager.license"
             android:value="${TRANSISTORSOFT_LOCATIONMANAGER_LICENSE}" />
@@ -43,6 +42,28 @@
             </intent-filter>
         </activity>
 
+        <receiver
+            android:name=".scheduler.StartJobReceiver"
+            android:enabled="true"
+            android:exported="false" >
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="io.timmi.de4lroadtracker.intent.action.START_JOB_FIRSTTIME" />
+            </intent-filter>
+        </receiver>
+
+        <receiver android:name=".scheduler.AlarmWakefulReceiver" />
+
+        <service
+            android:name=".scheduler.MqttPublishJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:exported="true" />
+        <service
+            android:name=".scheduler.MqttPublishIntentService" />
+
+
+        <service android:name=".SensorRecorder" /> <!-- react-native-background-geolocation licence -->
         <service android:name=".SensorRecordService" />
         <service android:name="org.eclipse.paho.android.service.MqttService" />
     </application>

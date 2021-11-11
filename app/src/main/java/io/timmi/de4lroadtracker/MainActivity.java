@@ -55,6 +55,7 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 
 import io.timmi.de4lfilter.Filter;
+import io.timmi.de4lroadtracker.scheduler.StartJobReceiver;
 
 public class MainActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
     private static final String TAG = "DE4LMainActivity";
@@ -385,6 +386,13 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         }
     }
 
+    private void sendStartJobBroadcast(){
+        Log.v(TAG, "StartJob Broadcast");
+        Intent intent = new Intent();
+        intent.setAction(StartJobReceiver.START_JOB_BROADCAST_RECEIVER);
+        sendBroadcast(intent);
+    }
+
     void doBindService() {
         locationService.startBG();
         if (locationService.bgGeo != null) {
@@ -392,6 +400,9 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         }
         bindService(new Intent(this,
                 SensorRecorder.class), mConnection, Context.BIND_AUTO_CREATE);
+
+        sendStartJobBroadcast();
+
         mIsBound = true;
     }
 
