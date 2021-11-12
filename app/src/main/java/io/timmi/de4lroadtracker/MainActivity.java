@@ -21,6 +21,7 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
+import android.text.TextUtils;
 import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.Menu;
@@ -53,6 +54,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.StringJoiner;
 
 import io.timmi.de4lfilter.Filter;
 
@@ -64,6 +68,8 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     @Nullable
     private MenuItem stopStartMenuItem = null;
     private TSLocationWrapper locationService = null;
+    @Nullable
+    private MQTTConnection mqttConnection = null;
 
     public MainActivity() {
         //no instance
@@ -159,7 +165,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
             String line = "";
             while ((line = br.readLine()) != null) {
-               lines.append(line);
+                lines.append(line);
             }
 
         } catch (FileNotFoundException e) {
@@ -172,26 +178,37 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         return lines.toString();
     }
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        Log.i(TAG, Filter.filterMany("[[], []]", "[[], []]", "{}"));
+    public void filterAndPublish(MenuItem item) {
         File dir = getExternalFilesDir(null);
         if (dir.exists()) {
             File[] files = dir.listFiles();
+            List<String> locations = new ArrayList<String>();
+            List<String> sensorValues = new ArrayList<String>();
             for (File file : files) {
                 String filename = file.getAbsolutePath();
                 File locationsFile = new File(filename.substring(0, filename.length() - 5) + "_locations.json");
                 if (locationsFile.exists()) {
                     Log.i(TAG, locationsFile.getName());
-
-                    String locationsJson = "[" + readFileAsString(locationsFile) + "," + readFileAsString(locationsFile) + "]";
-                    String sensorJson = "[" + readFileAsString(file) + "," + readFileAsString(file) + "]";
-                    String resultJson = Filter.filterMany(locationsJson, sensorJson, "{}");
-
-                    Log.i(TAG, resultJson);
+                    locations.add(readFileAsString(locationsFile));
+                    sensorValues.add(readFileAsString(file));
                 }
             }
+
+            String resultJson = Filter.filterMany(
+                    "[" + TextUtils.join(",", locations) + "]",
+                    "[" + TextUtils.join(",", sensorValues) + "]",
+                    "{}");
+
+            Log.i(TAG, resultJson);
+            if (mqttConnection != null) {
+                mqttConnection.publishMessage(resultJson);
+            }
         }
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        Log.i(TAG, Filter.filterMany("[[], []]", "[[], []]", "{}"));
 
 
         super.onCreate(savedInstanceState);
@@ -258,10 +275,12 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                         doBindService();
                         //moveTaskToBack(true);
                         //finish();
+                        mqttConnection = new MQTTConnection(getBaseContext(), getApplicationContext());
                     }
                 });
             }
         });
+
     }
 
     public void stopTrackingService() {
@@ -283,6 +302,9 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         stopStartMenuItem.setIcon(R.drawable.baseline_not_started_black_48);
         stopStartMenuItem.setTitle(R.string.start_service);
         stopService(new Intent(getBaseContext(), SensorRecorder.class));
+        if (mqttConnection != null) {
+            mqttConnection.close();
+        }
     }
 
     @Override

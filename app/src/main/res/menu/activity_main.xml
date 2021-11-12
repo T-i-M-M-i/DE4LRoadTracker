@@ -20,6 +20,10 @@
         app:showAsAction="never"
         android:title="@string/menu_privacy"/>
     <item
+        android:onClick="filterAndPublish"
+        app:showAsAction="never"
+        android:title="@string/menu_send"/>
+    <item
         android:onClick="startMqttTestActivity"
         app:showAsAction="never"
         android:title="@string/menu_debug"/>
