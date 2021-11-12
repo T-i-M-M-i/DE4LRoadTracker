@@ -23,6 +23,7 @@ import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.text.method.LinkMovementMethod;
+import android.util.JsonReader;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -45,6 +46,8 @@ import io.timmi.de4lroadtracker.helper.TrackerIndicatorNotification;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -70,6 +73,13 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     private TSLocationWrapper locationService = null;
     @Nullable
     private MQTTConnection mqttConnection = null;
+
+    private MQTTConnection getMqttConnection() {
+        if (mqttConnection == null) {
+            mqttConnection = new MQTTConnection(getApplicationContext(), getApplicationContext());
+        }
+        return mqttConnection;
+    }
 
     public MainActivity() {
         //no instance
@@ -189,8 +199,20 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                 File locationsFile = new File(filename.substring(0, filename.length() - 5) + "_locations.json");
                 if (locationsFile.exists()) {
                     Log.i(TAG, locationsFile.getName());
-                    locations.add(readFileAsString(locationsFile));
-                    sensorValues.add(readFileAsString(file));
+                    String loc = readFileAsString(locationsFile);
+                    if (loc.length() > 2) {
+                        locations.add(loc);
+                        String sensorValuesStringAll = readFileAsString(file);
+                        try {
+                            JSONObject sensJSon = new JSONObject(sensorValuesStringAll);
+                            String sensorValuesString = sensJSon.getJSONArray("acceleration").toString();
+                            sensorValues.add(sensorValuesString);
+                            String result = Filter.filter(loc, sensorValuesString, "{}");
+                            Log.i(TAG, result);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
                 }
             }
 
@@ -200,16 +222,13 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                     "{}");
 
             Log.i(TAG, resultJson);
-            if (mqttConnection != null) {
-                mqttConnection.publishMessage(resultJson);
-            }
+            getMqttConnection().publishMessage(resultJson);
         }
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.i(TAG, Filter.filterMany("[[], []]", "[[], []]", "{}"));
-
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -275,7 +294,6 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                         doBindService();
                         //moveTaskToBack(true);
                         //finish();
-                        mqttConnection = new MQTTConnection(getBaseContext(), getApplicationContext());
                     }
                 });
             }
@@ -302,9 +320,6 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         stopStartMenuItem.setIcon(R.drawable.baseline_not_started_black_48);
         stopStartMenuItem.setTitle(R.string.start_service);
         stopService(new Intent(getBaseContext(), SensorRecorder.class));
-        if (mqttConnection != null) {
-            mqttConnection.close();
-        }
     }
 
     @Override
