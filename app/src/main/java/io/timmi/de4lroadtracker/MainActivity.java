@@ -203,26 +203,21 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                     if (loc.length() > 2) {
                         locations.add(loc);
                         String sensorValuesStringAll = readFileAsString(file);
-                        try {
-                            JSONObject sensJSon = new JSONObject(sensorValuesStringAll);
-                            String sensorValuesString = sensJSon.getJSONArray("acceleration").toString();
-                            sensorValues.add(sensorValuesString);
-                            String result = Filter.filter(loc, sensorValuesString, "{}");
-                            Log.i(TAG, result);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
+                        sensorValues.add(sensorValuesStringAll);
                     }
                 }
             }
 
+        try {
             String resultJson = Filter.filterMany(
                     "[" + TextUtils.join(",", locations) + "]",
                     "[" + TextUtils.join(",", sensorValues) + "]",
                     "{}");
-
-            Log.i(TAG, resultJson);
             getMqttConnection().publishMessage(resultJson);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         }
     }
 
