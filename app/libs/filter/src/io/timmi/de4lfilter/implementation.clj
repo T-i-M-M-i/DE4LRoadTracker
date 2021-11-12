@@ -1,21 +1,16 @@
 (ns io.timmi.de4lfilter.implementation)
 
-(def env {
- :speed-limit 5  ;; in km/h
- :neighbourhood-radius 30  ;; in seconds
-})  ;; mock yogthos/config
-
 (defn invalid [doc]
   (< (:speed doc) 0))
 
-(defn slow [doc]
-  (< (:speed doc) (:speed-limit env)))
+(defn slow [doc conf]
+  (< (:speed doc) (:speed-limit conf)))
 
-(defn neighbours? [doc1 doc2]
+(defn neighbours? [doc1 doc2 conf]
   (< (Math/abs (- (get-in doc1 [:tmp :timestamp]) (get-in doc2 [:tmp :timestamp])))
-     (* 1000 (:neighbourhood-radius env))))
+     (* 1000 (:neighbourhood-radius conf))))
 
-(defn remove-after-slow [docs & {:keys [reverse?] :or {reverse? true}}]
+(defn remove-after-slow [docs conf & {:keys [reverse?] :or {reverse? true}}]
   (let [;; depending on `reverse?` we append at beginning or end of the vector
         con (if reverse?
                 (fn [remaining-docs doc] (cons doc remaining-docs))
@@ -23,10 +18,10 @@
         [_ remaining-docs]  ;; the accumulated values of our reducer
           (reduce (fn [[last-slow remaining-docs] doc]
                       ;; the current doc can be in one of 3 states:
-                      (if (slow doc)
+                      (if (slow doc conf)
                           ;; 1. slow
                           [doc (con remaining-docs doc)]
-                          (if (and last-slow (neighbours? doc last-slow))
+                          (if (and last-slow (neighbours? doc last-slow conf))
                               ;; 2. in neighbourhood of slow
                               [last-slow remaining-docs]
                               ;; 3. outside of slow neighbourhood
@@ -35,10 +30,10 @@
                   docs)]
        remaining-docs))
 
-(defn split-at-slow [docs]
+(defn split-at-slow [docs conf]
   (let [[_ splitted-docs]
           (reduce (fn [[predecessor-slow? splitted-docs] doc]
-                      (if (slow doc)
+                      (if (slow doc conf)
                           [true splitted-docs]
                           (if predecessor-slow?
                               [false (conj splitted-docs [doc])]
@@ -66,12 +61,12 @@
 
 (defn remove-around-slow
   "This function removes all docs with slow neighbours"
-  [docs]
-  (->> docs
-       remove-after-slow  ;; remove successors, keep slow (needed in next step), reverse order
-       remove-after-slow  ;; remove predecessors, reverse order back to original
-       split-at-slow      ;; get rid of the slow entries and split
-       merge+relative-time))
+  [docs conf]
+  (-> docs
+      (remove-after-slow conf)  ;; remove successors, keep slow (needed in next step), reverse order
+      (remove-after-slow conf)  ;; remove predecessors, reverse order back to original
+      (split-at-slow conf)      ;; get rid of the slow entries and split
+      merge+relative-time))
 
 (defn ->time-relative-to [locations:doc]
   (fn [sensors:doc]

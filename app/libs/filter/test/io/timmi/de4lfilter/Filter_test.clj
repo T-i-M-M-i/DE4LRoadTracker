@@ -43,3 +43,9 @@
     (testing "Filter datasets from multiple datasets at once"
       (is (= 20 (count (parse result))))
       (is (= 432 (count_acceleration result))))))
+
+(deftest conf-test
+  (let [result (-filterMany (json_list_concat sample_locations) (json_list_concat sample_sensors) "{}" {:speed-limit 10})]
+    (testing "Higher Speed Limit"
+      (is (= 15 (count (parse result))))
+      (is (= 407 (count_acceleration result))))))
