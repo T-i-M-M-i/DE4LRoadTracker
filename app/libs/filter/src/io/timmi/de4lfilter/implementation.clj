@@ -82,8 +82,13 @@
                           (:time locations:doc)))
           (dissoc :timestamp))))
 
+(defn cons_non_nil [item seq]
+  (if (nil? item)
+      seq
+      (cons item seq)))
+
 (defn merge-sensordata-by-time [sensors:docs locations:docs]
-  (cons (first locations:docs)
+  (cons_non_nil (first locations:docs)
         ;; instead of map we could implement it more efficient using reduce on time sorted locations:docs
         (map (fn [[predecessor doc]]
                  (let [start (get-in predecessor [:tmp :timestamp])
