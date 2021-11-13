@@ -8,6 +8,7 @@
             [clojure.data.json :as json]))
 
 (def default_conf {
+ :skip-validation false
  :speed-limit 5  ;; in km/h
  :neighbourhood-radius 30  ;; in seconds
 })
@@ -21,13 +22,13 @@
        json/write-str))
 
 (defn -filter [locations:json sensors:json meta:json & [conf]]
-  (let [locatios:docs (parse locations:json)
-        sensors:docs (parse sensors:json)
+  (let [locatios:docs (parse locations:json :io.timmi.de4lfilter.parse/locations conf)
+        sensors:docs (parse sensors:json :io.timmi.de4lfilter.parse/sensors conf)
         meta:docs (parse meta:json)]
        (filter* locatios:docs sensors:docs meta:docs (merge default_conf conf))))
 
 (defn -filterMany [locations:json sensors:json meta:json & [conf]]
-  (let [locations:docs (apply concat (parse locations:json))
-        sensors:docs (apply concat (parse sensors:json))
+  (let [locations:docs (apply concat (parse locations:json :io.timmi.de4lfilter.parse/locationss conf))
+        sensors:docs (apply concat (parse sensors:json :io.timmi.de4lfilter.parse/sensorss conf))
         meta:docs (parse meta:json)]
        (filter* locations:docs sensors:docs meta:docs (merge default_conf conf))))

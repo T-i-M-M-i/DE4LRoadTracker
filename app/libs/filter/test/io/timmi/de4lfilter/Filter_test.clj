@@ -49,3 +49,9 @@
     (testing "Higher Speed Limit"
       (is (= 15 (count (parse result))))
       (is (= 407 (count_acceleration result))))))
+
+(deftest parser-test
+  (testing "invalid locations"
+    (is (thrown? AssertionError (-filter "[{}]" (first sample_sensors) "{}"))))
+  (testing "invalid sensors"
+    (is (thrown? AssertionError (-filter (first sample_locations) "{\"my sensor\": [{}]}" "{}")))))

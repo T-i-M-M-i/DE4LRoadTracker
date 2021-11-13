@@ -1,9 +1,30 @@
 (ns io.timmi.de4lfilter.parse
   (:require [clojure.data.json :as json]
+            [clojure.spec.alpha :as s]
             [io.timmi.de4lfilter.time :refer [from-local-str]]))
 
-(defn parse [json:str]
+(s/def :location/timestamp string?)
+(s/def ::longitude number?)
+(s/def ::latitude number?)
+(s/def ::speed number?)
+(s/def ::coords (s/keys :req-un [::longitude ::latitude ::speed]))
+(s/def ::locations (s/coll-of (s/keys :req-un [:location/timestamp ::coords])))
+(s/def ::locationss (s/coll-of ::locations))
+
+(s/def :sensor/timestamp number?)
+(s/def ::value sequential?)
+(s/def ::sensordata (s/keys :req-un [:sensor/timestamp ::value]))
+(s/def ::sensors (s/map-of keyword? (s/coll-of ::sensordata)))
+(s/def ::sensorss (s/coll-of ::sensors))
+
+(defn parse
+ ([json:str]
   (json/read-str json:str :key-fn keyword))
+ ([json:str spec conf]
+  (let [parsed (parse json:str)]
+       (if-not (:skip-validation conf)
+               (assert (s/valid? spec parsed) (s/explain spec parsed)))
+       parsed)))
 
 (defn transform_locations [orig]
   (let [coords (:coords orig)]
