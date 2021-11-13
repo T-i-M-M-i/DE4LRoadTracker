@@ -212,7 +212,9 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
             String resultJson = Filter.filterMany(
                     "[" + TextUtils.join(",", locations) + "]",
                     "[" + TextUtils.join(",", sensorValues) + "]",
-                    "{}");
+                    "{}",
+                    "{\"speed-limit\": 1}"  // the optional 4th argument can be used to overwrite the default config
+            );
             getMqttConnection().publishMessage(resultJson);
         } catch (Exception e) {
             e.printStackTrace();
@@ -223,7 +225,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.i(TAG, Filter.filterMany("[[], []]", "[{}, {}]", "{}"));
+        Log.i(TAG, Filter.filterMany("[[], []]", "[{}, {}]", "{}", "{}"));
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
