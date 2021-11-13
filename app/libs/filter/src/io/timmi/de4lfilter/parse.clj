@@ -23,7 +23,9 @@
  ([json:str spec conf]
   (let [parsed (parse json:str)]
        (if-not (:skip-validation conf)
-               (assert (s/valid? spec parsed) (s/explain spec parsed)))
+               (when-not (s/valid? spec parsed)
+                 (println (s/explain spec parsed))
+                 (throw (AssertionError. (str "Parsing " spec " failed")))))
        parsed)))
 
 (defn transform_locations [orig]
