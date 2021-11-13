@@ -2,10 +2,6 @@ package io.timmi.de4lroadtracker;
 
 import android.Manifest;
 import android.app.ActivityManager;
-
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
-
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -21,47 +17,36 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
-import android.text.TextUtils;
 import android.text.method.LinkMovementMethod;
-import android.util.JsonReader;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-
-import com.google.android.material.textfield.TextInputEditText;
-
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.textfield.TextInputEditText;
+
+import org.json.JSONArray;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+import io.timmi.de4lfilter.Filter;
 import io.timmi.de4lroadtracker.activity.DebugActivity;
+import io.timmi.de4lroadtracker.helper.AggregateAndFilter;
 import io.timmi.de4lroadtracker.helper.Md5Builder;
 import io.timmi.de4lroadtracker.helper.RawResourceLoader;
 import io.timmi.de4lroadtracker.helper.TSLocationWrapper;
 import io.timmi.de4lroadtracker.helper.TrackerIndicatorNotification;
-
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.StringJoiner;
-
-import io.timmi.de4lfilter.Filter;
 
 public class MainActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
     private static final String TAG = "DE4LMainActivity";
@@ -167,60 +152,18 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
     }
 
-    private String readFileAsString(File file) {
-        StringBuilder lines = new StringBuilder();
-        try {
-            FileInputStream fileInputStream = new FileInputStream(file);
-            BufferedReader br = new BufferedReader(new InputStreamReader(fileInputStream, "ISO-8859-1"));
-
-            String line = "";
-            while ((line = br.readLine()) != null) {
-                lines.append(line);
-            }
-
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return lines.toString();
-    }
 
     public void filterAndPublish(MenuItem item) {
+        filterAndPublish();
+    }
+
+    public void filterAndPublish() {
         File dir = getExternalFilesDir(null);
-        if (dir.exists()) {
-            File[] files = dir.listFiles();
-            List<String> locations = new ArrayList<String>();
-            List<String> sensorValues = new ArrayList<String>();
-            for (File file : files) {
-                String filename = file.getAbsolutePath();
-                File locationsFile = new File(filename.substring(0, filename.length() - 5) + "_locations.json");
-                if (locationsFile.exists()) {
-                    Log.i(TAG, locationsFile.getName());
-                    String loc = readFileAsString(locationsFile);
-                    if (loc.length() > 2) {
-                        locations.add(loc);
-                        String sensorValuesStringAll = readFileAsString(file);
-                        sensorValues.add(sensorValuesStringAll);
-                    }
-                }
-            }
-
-        try {
-            String resultJson = Filter.filterMany(
-                    "[" + TextUtils.join(",", locations) + "]",
-                    "[" + TextUtils.join(",", sensorValues) + "]",
-                    "{}",
-                    "{\"speed-limit\": 1}"  // the optional 4th argument can be used to overwrite the default config
-            );
-            getMqttConnection().publishMessage(resultJson);
-        } catch (Exception e) {
-            e.printStackTrace();
+        String resultJson = AggregateAndFilter.processResults(dir, true);
+        if (resultJson == null) {
+            return;
         }
-
-        }
+        getMqttConnection().publishMessage(resultJson);
     }
 
     @Override
@@ -239,6 +182,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         if (!privacyAgreementAccepted()) {
             startActivity(new Intent(this, PrivacyAgreementActivity.class));
         }
+        getMqttConnection();
     }
 
     @Override
@@ -317,6 +261,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         stopStartMenuItem.setIcon(R.drawable.baseline_not_started_black_48);
         stopStartMenuItem.setTitle(R.string.start_service);
         stopService(new Intent(getBaseContext(), SensorRecorder.class));
+        filterAndPublish();
     }
 
     @Override

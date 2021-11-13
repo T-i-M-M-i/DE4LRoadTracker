@@ -29,6 +29,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import io.timmi.de4lroadtracker.helper.AggregateAndFilter;
 import io.timmi.de4lroadtracker.helper.JsonSerializer;
 import io.timmi.de4lroadtracker.helper.TrackerIndicatorNotification;
 import io.timmi.de4lroadtracker.model.AggregatedSensorValues;
@@ -42,10 +43,23 @@ public class SensorRecorder extends Service implements SensorEventListener {
 
     private final static String TAG = "DE4SensorRecordService";
     private final static Integer STORE_QUEUE_SIZE = 500;
+    private final static Integer PUBLISH_AFTER_STORE_SIZE = 5;
+
+    private Integer unpublishedStoreCount = 0;
 
     private List<DE4LSensorEvent> sensorEventQueue = new LinkedList<>();
 
     private TrackerIndicatorNotification notification = new TrackerIndicatorNotification(this);
+
+    @Nullable
+    private MQTTConnection mqttConnection = null;
+
+    private MQTTConnection getMqttConnection() {
+        if (mqttConnection == null) {
+            mqttConnection = new MQTTConnection(getApplicationContext(), getApplicationContext());
+        }
+        return mqttConnection;
+    }
 
     private void clearSensorData() {
         sensorEventQueue = new LinkedList<DE4LSensorEvent>();
@@ -62,6 +76,7 @@ public class SensorRecorder extends Service implements SensorEventListener {
         notification.showNotification();
 
         setupSensors();
+        getMqttConnection();
     }
 
     @Override
@@ -130,6 +145,7 @@ public class SensorRecorder extends Service implements SensorEventListener {
 
     private void storeData() {
         //Map<String, AggregatedSensorValues> data = AggregatedSensorData.aggregateSensorData(sensorEventQueue);
+        unpublishedStoreCount++;
         try {
             JSONObject sensorDataJSON = JsonSerializer.groupSensorDataToJSON(sensorEventQueue);
 
@@ -176,6 +192,19 @@ public class SensorRecorder extends Service implements SensorEventListener {
         if (sensorEventQueue.size() > STORE_QUEUE_SIZE) {
             storeData();
         }
+        if (unpublishedStoreCount >= PUBLISH_AFTER_STORE_SIZE) {
+            unpublishedStoreCount = 0;
+            filterAndPublish();
+        }
+    }
+
+    private void filterAndPublish() {
+        File dir = getExternalFilesDir(null);
+        String resultJson = AggregateAndFilter.processResults(dir, true);
+        if (resultJson == null) {
+            return;
+        }
+        getMqttConnection().publishMessage(resultJson);
     }
 
     @Override
