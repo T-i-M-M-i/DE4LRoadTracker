@@ -163,10 +163,12 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         File dir = getExternalFilesDir(null);
         JSONObject deviceInfo = JsonInfoBuilder.getDeviceInfo(getApplicationContext());
         JSONObject appInfo = JsonInfoBuilder.getAppInfo(this);
+        boolean removeFiles = !settings.getBoolean("keepDataOnDevice", false);
+        int speedLimit = Integer.parseInt(settings.getString("speedLimitKMH", "5"));
         String resultJson = AggregateAndFilter.processResults(dir,
                 SensorRecorder.UNPROCESSED_SENSOR_DATA_DIR,
                 SensorRecorder.PROCESSED_SENSOR_DATA_DIR ,
-                false, appInfo, deviceInfo);
+                removeFiles, appInfo, deviceInfo, speedLimit);
         if (resultJson == null) {
             return;
         }

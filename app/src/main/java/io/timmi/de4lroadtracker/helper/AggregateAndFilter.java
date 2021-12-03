@@ -45,7 +45,7 @@ public class AggregateAndFilter {
     }
 
     @Nullable
-    public static  String processResults(File dir,String unprocessedDir, String processedDir,  boolean removeFiles, JSONObject appInfo, JSONObject deviceInfo) {
+    public static  String processResults(File dir,String unprocessedDir, String processedDir,  boolean removeFiles, JSONObject appInfo, JSONObject deviceInfo, int speedLimit) {
         File sensorDataDir = new File(dir, unprocessedDir);
         File processedSensorDataDir = new File(dir, processedDir);
         if(!processedSensorDataDir.exists()) {
@@ -88,7 +88,7 @@ public class AggregateAndFilter {
                         locationString,
                         sensorValuesString,
                         metaDataString,
-                        "{\"speed-limit\": 1}"  // the optional 4th argument can be used to overwrite the default config
+                        "{\"speed-limit\": " + String.valueOf(speedLimit) +  "}"  // the optional 4th argument can be used to overwrite the default config
                 );
             } catch (Exception e) {
                 e.printStackTrace();

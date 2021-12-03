@@ -3,6 +3,7 @@ package io.timmi.de4lroadtracker;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -12,6 +13,7 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -50,6 +52,8 @@ public class SensorRecorder extends Service implements SensorEventListener {
     public final static String UNPROCESSED_SENSOR_DATA_DIR = "unprocessed";
     public final static String PROCESSED_SENSOR_DATA_DIR = "processed";
 
+    private SharedPreferences settings;
+
     private Integer unpublishedStoreCount = 0;
 
     private List<DE4LSensorEvent> sensorEventQueue = new LinkedList<>();
@@ -79,6 +83,7 @@ public class SensorRecorder extends Service implements SensorEventListener {
 
         notification.setupNotifications();
         notification.showNotification();
+        settings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
         setupSensors();
         getMqttConnection();
@@ -242,13 +247,16 @@ public class SensorRecorder extends Service implements SensorEventListener {
         File dir = getExternalFilesDir(null);
         JSONObject deviceInfo = JsonInfoBuilder.getDeviceInfo(getApplicationContext());
         JSONObject appInfo = JsonInfoBuilder.getAppInfo(this);
+        boolean removeFiles = !settings.getBoolean("keepDataOnDevice", false);
+        int speedLimit = Integer.parseInt(settings.getString("speedLimitKMH", "5"));
         String resultJson = AggregateAndFilter.processResults(
                 dir,
                 SensorRecorder.UNPROCESSED_SENSOR_DATA_DIR,
                 SensorRecorder.PROCESSED_SENSOR_DATA_DIR ,
-                false,
+                removeFiles,
                 appInfo,
-                deviceInfo);
+                deviceInfo,
+                speedLimit);
         if (resultJson == null) {
             return;
         }
