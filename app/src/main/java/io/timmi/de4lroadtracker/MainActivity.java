@@ -34,6 +34,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputEditText;
 
 import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -43,6 +44,7 @@ import java.io.IOException;
 import io.timmi.de4lfilter.Filter;
 import io.timmi.de4lroadtracker.activity.DebugActivity;
 import io.timmi.de4lroadtracker.helper.AggregateAndFilter;
+import io.timmi.de4lroadtracker.helper.JsonInfoBuilder;
 import io.timmi.de4lroadtracker.helper.Md5Builder;
 import io.timmi.de4lroadtracker.helper.RawResourceLoader;
 import io.timmi.de4lroadtracker.helper.TSLocationWrapper;
@@ -159,7 +161,12 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
     public void filterAndPublish() {
         File dir = getExternalFilesDir(null);
-        String resultJson = AggregateAndFilter.processResults(dir, true);
+        JSONObject deviceInfo = JsonInfoBuilder.getDeviceInfo(getApplicationContext());
+        JSONObject appInfo = JsonInfoBuilder.getAppInfo(this);
+        String resultJson = AggregateAndFilter.processResults(dir,
+                SensorRecorder.UNPROCESSED_SENSOR_DATA_DIR,
+                SensorRecorder.PROCESSED_SENSOR_DATA_DIR ,
+                false, appInfo, deviceInfo);
         if (resultJson == null) {
             return;
         }

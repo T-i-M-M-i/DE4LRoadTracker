@@ -17,6 +17,7 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -30,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 
 import io.timmi.de4lroadtracker.helper.AggregateAndFilter;
+import io.timmi.de4lroadtracker.helper.JsonInfoBuilder;
 import io.timmi.de4lroadtracker.helper.JsonSerializer;
 import io.timmi.de4lroadtracker.helper.TrackerIndicatorNotification;
 import io.timmi.de4lroadtracker.model.AggregatedSensorValues;
@@ -43,7 +45,10 @@ public class SensorRecorder extends Service implements SensorEventListener {
 
     private final static String TAG = "DE4SensorRecordService";
     private final static Integer STORE_QUEUE_SIZE = 500;
-    private final static Integer PUBLISH_AFTER_STORE_SIZE = 5;
+    private final static Integer PUBLISH_AFTER_STORE_SIZE = 3;
+
+    public final static String UNPROCESSED_SENSOR_DATA_DIR = "unprocessed";
+    public final static String PROCESSED_SENSOR_DATA_DIR = "processed";
 
     private Integer unpublishedStoreCount = 0;
 
@@ -91,6 +96,10 @@ public class SensorRecorder extends Service implements SensorEventListener {
         Sensor light = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
         Sensor linearAcceleration = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
         Sensor rotationVector = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
+
+        Sensor[] sensors = { light, linearAcceleration, rotationVector };
+
+        storeMetaData(sensors);
 
         sensorManager.registerListener(this, light, SensorManager.SENSOR_DELAY_NORMAL);
         sensorManager.registerListener(this, linearAcceleration, SensorManager.SENSOR_DELAY_NORMAL);
@@ -143,20 +152,47 @@ public class SensorRecorder extends Service implements SensorEventListener {
         }
     }
 
-    private void storeData() {
+    private void storeMetaData(Sensor[] sensors) {
+        JSONArray sensorInfos = new JSONArray();
+        for (Sensor sensor :
+                sensors) {
+            try {
+
+                JSONObject sInfo = JsonSerializer.buildSensorInfoJSON(sensor);
+                sensorInfos.put(sInfo);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        try {
+            File file = new File(getExternalFilesDir(null), "sensors_info.json");
+            FileOutputStream fOut = new FileOutputStream(file, false);
+            fOut.write(sensorInfos.toString().getBytes());
+            fOut.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private boolean storeData() {
         //Map<String, AggregatedSensorValues> data = AggregatedSensorData.aggregateSensorData(sensorEventQueue);
-        unpublishedStoreCount++;
         try {
             JSONObject sensorDataJSON = JsonSerializer.groupSensorDataToJSON(sensorEventQueue);
 
+            File directory = new File(getExternalFilesDir(null)+File.separator+UNPROCESSED_SENSOR_DATA_DIR);
+            if(!directory.exists()) directory.mkdirs();
 
-            File file = File.createTempFile(fileName, ".json", getExternalFilesDir(null));
+
+            File file = File.createTempFile(fileName, ".json", directory);
             FileOutputStream fOut = new FileOutputStream(file, true);
             //FileOutputStream fOut = openFileOutput(fileName, MODE_APPEND);
             fOut.write(sensorDataJSON.toString().getBytes());
             fOut.close();
             clearSensorData();
             sendStoredJsonFileEvent(file.getAbsolutePath());
+            return true;
         } catch (JSONException e) {
             e.printStackTrace();
         } catch (FileNotFoundException e) {
@@ -164,6 +200,7 @@ public class SensorRecorder extends Service implements SensorEventListener {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return false;
     }
 
     @Override
@@ -190,7 +227,10 @@ public class SensorRecorder extends Service implements SensorEventListener {
             }
         }
         if (sensorEventQueue.size() > STORE_QUEUE_SIZE) {
-            storeData();
+            boolean success = storeData();
+            if(success) {
+                unpublishedStoreCount++;
+            }
         }
         if (unpublishedStoreCount >= PUBLISH_AFTER_STORE_SIZE) {
             unpublishedStoreCount = 0;
@@ -200,7 +240,15 @@ public class SensorRecorder extends Service implements SensorEventListener {
 
     private void filterAndPublish() {
         File dir = getExternalFilesDir(null);
-        String resultJson = AggregateAndFilter.processResults(dir, true);
+        JSONObject deviceInfo = JsonInfoBuilder.getDeviceInfo(getApplicationContext());
+        JSONObject appInfo = JsonInfoBuilder.getAppInfo(this);
+        String resultJson = AggregateAndFilter.processResults(
+                dir,
+                SensorRecorder.UNPROCESSED_SENSOR_DATA_DIR,
+                SensorRecorder.PROCESSED_SENSOR_DATA_DIR ,
+                false,
+                appInfo,
+                deviceInfo);
         if (resultJson == null) {
             return;
         }

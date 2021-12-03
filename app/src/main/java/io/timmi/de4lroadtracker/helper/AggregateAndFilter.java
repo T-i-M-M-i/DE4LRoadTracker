@@ -5,6 +5,8 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -43,11 +45,22 @@ public class AggregateAndFilter {
     }
 
     @Nullable
-    public static  String processResults(File dir, Boolean removeFiles) {
-        if (dir.exists()) {
-            File[] files = dir.listFiles();
+    public static  String processResults(File dir,String unprocessedDir, String processedDir,  boolean removeFiles, JSONObject appInfo, JSONObject deviceInfo) {
+        File sensorDataDir = new File(dir, unprocessedDir);
+        File processedSensorDataDir = new File(dir, processedDir);
+        if(!processedSensorDataDir.exists()) {
+            processedSensorDataDir.mkdir();
+        }
+        if (sensorDataDir.exists()) {
+            File[] files = sensorDataDir.listFiles();
             List<String> locations = new ArrayList<String>();
             List<String> sensorValues = new ArrayList<String>();
+
+            String sensorInfos = "[]";
+            File sensorInfoFile = new File(dir, "sensors_info.json");
+            if(sensorInfoFile.exists()) {
+                sensorInfos = readFileAsString(sensorInfoFile);
+            }
             for (File file : files) {
                 String filename = file.getAbsolutePath();
                 File locationsFile = new File(filename.substring(0, filename.length() - 5) + "_locations.json");
@@ -62,14 +75,19 @@ public class AggregateAndFilter {
                 }
                 if(removeFiles && file.isFile() && file.canWrite()) {
                     file.delete();
+                } else {
+                    file.renameTo(new File(processedSensorDataDir, file.getName()));
                 }
             }
 
             try {
+                String locationString = "[" + TextUtils.join(",", locations) + "]";
+                String sensorValuesString = "[" + TextUtils.join(",", sensorValues) + "]";
+                String metaDataString = "{ \"sensorsInfo\": " + sensorInfos + ", \"appInfo\": " + appInfo.toString()  + ", \"deviceInfo\": " +  deviceInfo.toString() + " }";
                 return Filter.filterMany(
-                        "[" + TextUtils.join(",", locations) + "]",
-                        "[" + TextUtils.join(",", sensorValues) + "]",
-                        "{}",
+                        locationString,
+                        sensorValuesString,
+                        metaDataString,
                         "{\"speed-limit\": 1}"  // the optional 4th argument can be used to overwrite the default config
                 );
             } catch (Exception e) {
