@@ -20,10 +20,11 @@
        (merge default_conf conf_edn)))
 
 (defn wrap-meta
-  ""
+  "Returns nil or a json:str with meta+data"
   [meta:docs filteredData]
   (if-not (empty? filteredData)
-          (json/write-str filteredData)))
+          (json/write-str {:meta meta:docs
+                           :data filteredData})))
 
 (defn filter* [locations:docs sensors:docs meta:docs conf]
   (->> (map transform_locations locations:docs)

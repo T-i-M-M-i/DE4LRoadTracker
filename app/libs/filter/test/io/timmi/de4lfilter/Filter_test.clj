@@ -16,6 +16,7 @@
 
 (defn count_acceleration [result]
   (->> (parse result)
+       :data
        (map #(get-in % [:sensors :acceleration]))
        (map count)
        (apply +)))
@@ -23,15 +24,17 @@
 (deftest filter-test
   (let [result0 (-filter (first sample_locations) (first sample_sensors) "{}")
         result1 (-filter (second sample_locations) (second sample_sensors) "{}")
-        result2 (-filter (last sample_locations) (last sample_sensors) "{}")]
+        result2 (-filter (last sample_locations) (last sample_sensors) "{\"foo\": \"bar\", \"answer\": 42}")]
     (testing "Only slow values"
       (is (= result0 nil))
       (is (= 0 (count_acceleration result0))))
     (testing "Some not filtered values"
-      (is (= 7 (count (parse result1))))
-      (is (= 13 (count (parse result2))))
+      (is (= 7 (count (:data (parse result1)))))
+      (is (= 13 (count (:data (parse result2)))))
       (is (= 30 (count_acceleration result1)))
-      (is (= 402 (count_acceleration result2))))))
+      (is (= 402 (count_acceleration result2))))
+    (testing "Meta data"
+      (is (= 42 (get-in (parse result2) [:meta :answer]))))))
 
 (defn json_list_concat [list_of_json_strings]
   (str "["
@@ -41,13 +44,13 @@
 (deftest filterMany-test
   (let [result (-filterMany (json_list_concat sample_locations) (json_list_concat sample_sensors) "{}")]
     (testing "Filter datasets from multiple datasets at once"
-      (is (= 20 (count (parse result))))
+      (is (= 20 (count (:data (parse result)))))
       (is (= 432 (count_acceleration result))))))
 
 (deftest conf-test
   (let [result (-filterMany (json_list_concat sample_locations) (json_list_concat sample_sensors) "{}" {:speed-limit 10})]
     (testing "Higher Speed Limit"
-      (is (= 15 (count (parse result))))
+      (is (= 15 (count (:data (parse result)))))
       (is (= 407 (count_acceleration result))))))
 
 (deftest parser-test
