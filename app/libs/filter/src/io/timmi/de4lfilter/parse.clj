@@ -19,7 +19,8 @@
 
 (defn parse
  ([json:str]
-  (json/read-str json:str :key-fn keyword))
+  (if json:str
+      (json/read-str json:str :key-fn keyword)))
  ([json:str spec conf]
   (let [parsed (parse json:str)]
        (if-not (:skip-validation conf)

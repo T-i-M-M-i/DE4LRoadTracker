@@ -25,7 +25,7 @@
         result1 (-filter (second sample_locations) (second sample_sensors) "{}")
         result2 (-filter (last sample_locations) (last sample_sensors) "{}")]
     (testing "Only slow values"
-      (is (= result0 "[]"))
+      (is (= result0 nil))
       (is (= 0 (count_acceleration result0))))
     (testing "Some not filtered values"
       (is (= 7 (count (parse result1))))

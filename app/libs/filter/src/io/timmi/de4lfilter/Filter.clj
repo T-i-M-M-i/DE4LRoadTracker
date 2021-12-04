@@ -19,13 +19,19 @@
                      conf)]
        (merge default_conf conf_edn)))
 
+(defn wrap-meta
+  ""
+  [meta:docs filteredData]
+  (if-not (empty? filteredData)
+          (json/write-str filteredData)))
+
 (defn filter* [locations:docs sensors:docs meta:docs conf]
   (->> (map transform_locations locations:docs)
        (remove invalid)
        (#(remove-around-slow % conf))
        (merge-sensordata-by-time sensors:docs)
        (map #(dissoc % :tmp))
-       json/write-str))
+       (wrap-meta meta:docs)))
 
 (defn -filter [locations:json sensors:json meta:json & [conf_orig]]
   (let [conf (parse+merge_conf conf_orig)
