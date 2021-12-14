@@ -20,7 +20,6 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.TimeZone;
 
-import io.timmi.de4lroadtracker.EventTime;
 import io.timmi.de4lroadtracker.model.AggregatedSensorValues;
 import io.timmi.de4lroadtracker.model.DE4LSensorEvent;
 

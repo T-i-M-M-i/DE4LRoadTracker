@@ -1,15 +1,6 @@
-package io.timmi.de4lroadtracker;
+package io.timmi.de4lroadtracker.helper;
 
-import android.hardware.Sensor;
 import android.os.SystemClock;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
-
-import io.timmi.de4lroadtracker.model.AggregatedSensorValues;
-import io.timmi.de4lroadtracker.model.DE4LSensorEvent;
 
 
 public class EventTime {
