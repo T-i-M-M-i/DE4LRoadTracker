@@ -180,8 +180,10 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         try {
             File gpxFile = Exporter.locationFilesToGPX(getExternalFilesDir(null), directory);
             if(gpxFile == null) return;
-            Exporter.shareGPX(gpxFile, getApplicationContext(), BuildConfig.APPLICATION_ID + ".fileprovider");
-        } catch (Exception ignored) {}
+            Exporter.shareGPX(gpxFile, this, BuildConfig.APPLICATION_ID + ".fileprovider");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void filterAndPublish(MenuItem item) {
