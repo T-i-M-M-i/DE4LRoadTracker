@@ -9,7 +9,7 @@
   (. (java.text.SimpleDateFormat. "yyyy-MM-dd HH:mm:ss.SSSZ") format dt))
 
 (defn timestamp->iso [ts]
-  (. (java.text.SimpleDateFormat. "yyyy-MM-dd HH:mm:ss.SSSZ") format (java.util.Date. ts)))
+  (date->iso (java.util.Date. ts)))
 
 (defn clj2gpx [data]
   (sexp-as-element [:gpx {
