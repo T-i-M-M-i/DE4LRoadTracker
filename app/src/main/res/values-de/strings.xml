@@ -7,8 +7,10 @@
     <string name="menu_settings">Einstellungen</string>
     <string name="menu_privacy">Datenschutz…</string>
     <string name="menu_debug">Debug</string>
+    <string name="menu_share_gpx">GPX teilen</string>
     <string name="menu_send">Daten senden</string>
     <string name="title_activity_settings">Einstellungen</string>
+    <string name="share_gpx_with">Teile GPX mit...</string>
 
     <!-- Preference Titles -->
     <string name="messages_header">Message Broker</string>
