@@ -30,7 +30,6 @@ public class MQTTConnection  implements SharedPreferences.OnSharedPreferenceChan
     @Nullable
     private Context appContext = null;
     private boolean subscriptionEnabled = true;
-    private boolean serviceShouldStop = false;
 
 
     String clientId = "ExampleAndroidClient";
@@ -64,9 +63,6 @@ public class MQTTConnection  implements SharedPreferences.OnSharedPreferenceChan
 
     private void connectMqtt() {
 
-        //avoid connecting to mqtt if we are in stopping state... (could rarely happen if settings changed while stopping)
-        if(serviceShouldStop)
-            return;
         final String serverUri = settings.getString("mqttUrl", "");
 
         clientId = clientId + System.currentTimeMillis();
