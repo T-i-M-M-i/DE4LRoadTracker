@@ -4,20 +4,9 @@
      :methods [^:static [filter [String String String String] String]
                ^:static [filterMany [String String String String] String]])
   (:require [io.timmi.de4lfilter.parse :refer [parse transform_locations]]
+            [io.timmi.de4lfilter.conf :refer [parse+merge_conf]]
             [io.timmi.de4lfilter.implementation :refer [invalid remove-around-slow merge-sensordata-by-time]]
             [clojure.data.json :as json]))
-
-(def default_conf {
- :skip-validation false
- :speed-limit 5  ;; in km/h
- :neighbourhood-radius 30  ;; in seconds
-})
-
-(defn parse+merge_conf [conf]
-  (let [conf_edn (if (string? conf)
-                     (parse conf)
-                     conf)]
-       (merge default_conf conf_edn)))
 
 (defn wrap-meta
   "Returns nil or a json:str with meta+data"
