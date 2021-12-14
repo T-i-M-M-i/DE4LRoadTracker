@@ -72,7 +72,7 @@
                     android:padding="5dp"
                     android:text="@string/distance"
                     android:textColor="#0C0C0C"
-                    android:textSize="20dp"
+                    android:textSize="18sp"
                     android:textStyle="bold" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
@@ -111,9 +111,9 @@
                     android:layout_marginTop="10dp"
                     android:gravity="center"
                     android:padding="5dp"
-                    android:text="@string/waypoints"
+                    android:text="@string/contribution"
                     android:textColor="#0C0C0C"
-                    android:textSize="20dp"
+                    android:textSize="18sp"
                     android:textStyle="bold" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
