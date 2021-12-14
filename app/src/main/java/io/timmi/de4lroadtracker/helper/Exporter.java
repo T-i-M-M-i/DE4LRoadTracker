@@ -22,11 +22,11 @@ public class Exporter {
 
         Uri contentUri = FileProvider.getUriForFile(context, providerAuthority, gpxFile);
         if (contentUri == null) return;
-        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        Intent shareIntent = new Intent(Intent.ACTION_VIEW);
         shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         shareIntent.setType("application/gpx+xml");
         shareIntent.putExtra(Intent.EXTRA_STREAM, contentUri);
-        context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.share_gpx_with)));
+        context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.open_gpx_with)));
 
     }
 

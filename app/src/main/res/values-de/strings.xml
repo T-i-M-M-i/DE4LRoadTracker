@@ -10,7 +10,7 @@
     <string name="menu_share_gpx">GPX teilen</string>
     <string name="menu_send">Daten senden</string>
     <string name="title_activity_settings">Einstellungen</string>
-    <string name="share_gpx_with">Teile GPX mit...</string>
+    <string name="open_gpx_with">Öffne GPX mit...</string>
 
     <!-- Preference Titles -->
     <string name="messages_header">Message Broker</string>
