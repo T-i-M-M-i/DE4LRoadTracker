@@ -12,7 +12,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Iterator;
@@ -21,7 +20,7 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.TimeZone;
 
-import io.timmi.de4lroadtracker.AggregatedSensorData;
+import io.timmi.de4lroadtracker.EventTime;
 import io.timmi.de4lroadtracker.model.AggregatedSensorValues;
 import io.timmi.de4lroadtracker.model.DE4LSensorEvent;
 
@@ -142,7 +141,7 @@ public class JsonSerializer {
             DE4LSensorEvent measurement = valueIterator.next();
             Sensor sensor = measurement.sensor;
             if (offsetInMS == null) {
-                offsetInMS = AggregatedSensorData.eventTimeOffset(measurement.timestamp);
+                offsetInMS = EventTime.eventTimeOffset(measurement.timestamp);
             }
             JSONArray measurementArray = res.optJSONArray(measurement.key);
             if (measurementArray == null) {
@@ -155,7 +154,7 @@ public class JsonSerializer {
                 mObj.put("sensorId", sensor.getId());
             }*/
             mObj.put("value", new JSONArray(measurement.values));
-            mObj.put("timestamp", AggregatedSensorData.eventTimeNanoToUnixTimeMS(measurement.timestamp, offsetInMS));
+            mObj.put("timestamp", EventTime.eventTimeNanoToUnixTimeMS(measurement.timestamp, offsetInMS));
             measurementArray.put(mObj);
             res.put(measurement.key, measurementArray);
         }
