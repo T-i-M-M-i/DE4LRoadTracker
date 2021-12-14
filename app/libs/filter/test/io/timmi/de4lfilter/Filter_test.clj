@@ -1,6 +1,7 @@
 (ns io.timmi.de4lfilter.Filter-test
   (:require [clojure.test :refer [deftest testing is]]
-            [io.timmi.de4lfilter.Filter :refer [-filter -filterMany]]
+            [io.timmi.de4lfilter.Filter :refer [-filter -filterMany -distance]]
+            [io.timmi.de4lfilter.Distance :refer [-distance]]
             [io.timmi.de4lfilter.parse :refer [parse]]
             [clojure.string :refer [join]]))
 
@@ -58,3 +59,8 @@
     (is (thrown? AssertionError (-filter "[{}]" (first sample_sensors) "{}"))))
   (testing "invalid sensors"
     (is (thrown? AssertionError (-filter (first sample_locations) "{\"my sensor\": [{}]}" "{}")))))
+
+(deftest distance-test
+  (testing "distance of locations"
+    (is (= 54 (Math/round (-distance (first sample_locations)))))
+    (is (= 458 (Math/round (-distance (second sample_locations)))))))
