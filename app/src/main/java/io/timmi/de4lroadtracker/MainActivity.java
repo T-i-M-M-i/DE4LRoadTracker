@@ -34,7 +34,6 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputEditText;
 
 import org.json.JSONArray;
-import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -43,9 +42,8 @@ import java.io.IOException;
 
 import io.timmi.de4lfilter.Filter;
 import io.timmi.de4lroadtracker.activity.DebugActivity;
-import io.timmi.de4lroadtracker.helper.AggregateAndFilter;
-import io.timmi.de4lroadtracker.helper.JsonInfoBuilder;
 import io.timmi.de4lroadtracker.helper.Md5Builder;
+import io.timmi.de4lroadtracker.helper.Publisher;
 import io.timmi.de4lroadtracker.helper.RawResourceLoader;
 import io.timmi.de4lroadtracker.helper.TSLocationWrapper;
 import io.timmi.de4lroadtracker.helper.TrackerIndicatorNotification;
@@ -160,24 +158,15 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     }
 
     public void filterAndPublish() {
-        File dir = getExternalFilesDir(null);
-        JSONObject deviceInfo = JsonInfoBuilder.getDeviceInfo(getApplicationContext());
-        JSONObject appInfo = JsonInfoBuilder.getAppInfo(this);
-        boolean removeFiles = !settings.getBoolean("keepDataOnDevice", false);
-        int speedLimit = Integer.parseInt(settings.getString("speedLimitKMH", "5"));
-        String resultJson = AggregateAndFilter.processResults(dir,
-                SensorRecorder.UNPROCESSED_SENSOR_DATA_DIR,
-                SensorRecorder.PROCESSED_SENSOR_DATA_DIR ,
-                removeFiles, appInfo, deviceInfo, speedLimit);
-        if (resultJson == null) {
-            return;
-        }
-        getMqttConnection().publishMessage(resultJson);
+        Publisher.filterAndPublish(getExternalFilesDir(null), getApplicationContext(), getMqttConnection());
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.i(TAG, Filter.filterMany("[[], []]", "[{}, {}]", "{}", "{}"));
+        String filterTest = Filter.filterMany("[[], []]", "[{}, {}]", "{}", "{}");
+        if(filterTest == null) {
+           Log.i(TAG, "filter returned null (success)");
+        }
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);

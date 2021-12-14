@@ -14,7 +14,6 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -30,13 +29,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
-import io.timmi.de4lroadtracker.helper.AggregateAndFilter;
-import io.timmi.de4lroadtracker.helper.JsonInfoBuilder;
 import io.timmi.de4lroadtracker.helper.JsonSerializer;
+import io.timmi.de4lroadtracker.helper.Publisher;
 import io.timmi.de4lroadtracker.helper.TrackerIndicatorNotification;
-import io.timmi.de4lroadtracker.model.AggregatedSensorValues;
 import io.timmi.de4lroadtracker.model.DE4LSensorEvent;
 
 public class SensorRecorder extends Service implements SensorEventListener {
@@ -244,23 +240,7 @@ public class SensorRecorder extends Service implements SensorEventListener {
     }
 
     private void filterAndPublish() {
-        File dir = getExternalFilesDir(null);
-        JSONObject deviceInfo = JsonInfoBuilder.getDeviceInfo(getApplicationContext());
-        JSONObject appInfo = JsonInfoBuilder.getAppInfo(this);
-        boolean removeFiles = !settings.getBoolean("keepDataOnDevice", false);
-        int speedLimit = Integer.parseInt(settings.getString("speedLimitKMH", "5"));
-        String resultJson = AggregateAndFilter.processResults(
-                dir,
-                SensorRecorder.UNPROCESSED_SENSOR_DATA_DIR,
-                SensorRecorder.PROCESSED_SENSOR_DATA_DIR ,
-                removeFiles,
-                appInfo,
-                deviceInfo,
-                speedLimit);
-        if (resultJson == null) {
-            return;
-        }
-        getMqttConnection().publishMessage(resultJson);
+        Publisher.filterAndPublish(getExternalFilesDir(null), getApplicationContext(), getMqttConnection());
     }
 
     @Override

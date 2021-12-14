@@ -14,10 +14,13 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.timmi.de4lfilter.Distance;
 import io.timmi.de4lfilter.Filter;
+import io.timmi.de4lroadtracker.model.ProcessedResult;
 
 public class AggregateAndFilter {
 
@@ -27,7 +30,7 @@ public class AggregateAndFilter {
         StringBuilder lines = new StringBuilder();
         try {
             FileInputStream fileInputStream = new FileInputStream(file);
-            BufferedReader br = new BufferedReader(new InputStreamReader(fileInputStream, "ISO-8859-1"));
+            BufferedReader br = new BufferedReader(new InputStreamReader(fileInputStream, StandardCharsets.ISO_8859_1));
 
             String line = "";
             while ((line = br.readLine()) != null) {
@@ -35,17 +38,20 @@ public class AggregateAndFilter {
             }
 
         } catch (FileNotFoundException e) {
+            Log.e(TAG, "File not found " + file.getAbsolutePath() );
             e.printStackTrace();
         } catch (UnsupportedEncodingException e) {
+            Log.e(TAG, "File encoding unsupported " + file.getAbsolutePath() );
             e.printStackTrace();
         } catch (IOException e) {
+            Log.e(TAG, "An IO-error occurred reading  " + file.getAbsolutePath() );
             e.printStackTrace();
         }
         return lines.toString();
     }
 
     @Nullable
-    public static  String processResults(File dir,String unprocessedDir, String processedDir,  boolean removeFiles, JSONObject appInfo, JSONObject deviceInfo, int speedLimit) {
+    public static ProcessedResult processResults(File dir, String unprocessedDir, String processedDir, boolean removeFiles, JSONObject appInfo, JSONObject deviceInfo, int speedLimit) {
         File sensorDataDir = new File(dir, unprocessedDir);
         File processedSensorDataDir = new File(dir, processedDir);
         if(!processedSensorDataDir.exists()) {
@@ -84,12 +90,15 @@ public class AggregateAndFilter {
                 String locationString = "[" + TextUtils.join(",", locations) + "]";
                 String sensorValuesString = "[" + TextUtils.join(",", sensorValues) + "]";
                 String metaDataString = "{ \"sensorsInfo\": " + sensorInfos + ", \"appInfo\": " + appInfo.toString()  + ", \"deviceInfo\": " +  deviceInfo.toString() + " }";
-                return Filter.filterMany(
+                //TODO why is this necessary - should always be a Double
+                double distanceTracked = ((Number)Distance.distanceMany(locationString)).doubleValue();
+                String filtered =  Filter.filterMany(
                         locationString,
                         sensorValuesString,
                         metaDataString,
-                        "{\"speed-limit\": " + String.valueOf(speedLimit) +  "}"  // the optional 4th argument can be used to overwrite the default config
+                        "{\"speed-limit\": " + speedLimit +  "}"  // the optional 4th argument can be used to overwrite the default config
                 );
+                return new ProcessedResult(filtered, distanceTracked);
             } catch (Exception e) {
                 e.printStackTrace();
             }
