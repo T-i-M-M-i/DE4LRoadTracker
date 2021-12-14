@@ -46,6 +46,7 @@ import java.io.IOException;
 
 import io.timmi.de4lfilter.Filter;
 import io.timmi.de4lroadtracker.activity.DebugActivity;
+import io.timmi.de4lroadtracker.helper.Exporter;
 import io.timmi.de4lroadtracker.helper.Md5Builder;
 import io.timmi.de4lroadtracker.helper.Publisher;
 import io.timmi.de4lroadtracker.helper.RawResourceLoader;
@@ -56,6 +57,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     private static final String TAG = "DE4LMainActivity";
     public static final String HISTORY_MESSAGE_BROADCAST = "io.timmi.de4lroadtracker.historymessagebroadcast";
     private static final int REQUEST_CODE_OPEN_DOCUMENT_TREE = 100;
+    private static final String GPX_DATA_DIR = "gpx";
     private SharedPreferences settings;
     @Nullable
     private MenuItem stopStartMenuItem = null;
@@ -171,6 +173,18 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
     }
 
+
+    public void shareGPX(MenuItem item) {
+        File directory = new File(getExternalFilesDir(null)+File.separator+GPX_DATA_DIR);
+        if(!directory.exists()) directory.mkdirs();
+        try {
+            File gpxFile = Exporter.locationFilesToGPX(getExternalFilesDir(null), directory);
+            if(gpxFile == null) return;
+            Exporter.shareGPX(gpxFile, this, BuildConfig.APPLICATION_ID + ".fileprovider");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     public void filterAndPublish(MenuItem item) {
         filterAndPublish();
