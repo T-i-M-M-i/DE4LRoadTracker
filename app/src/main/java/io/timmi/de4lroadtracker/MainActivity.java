@@ -1,6 +1,7 @@
 package io.timmi.de4lroadtracker;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.ActivityManager;
 import android.content.ComponentName;
 import android.content.Context;
@@ -16,8 +17,10 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
+import android.os.PowerManager;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.Menu;
@@ -122,11 +125,26 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     }
 
     private void askAndroid10Perm() {
-        if (Build.VERSION.SDK_INT >= 23) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             int result = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
             if (result != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this,
                         new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_CODE_OPEN_DOCUMENT_TREE);
+            }
+        }
+    }
+
+    @SuppressLint("BatteryLife")
+    private void askBatteryOptimizationExclusion() {
+        String packageName = getPackageName();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+            boolean isIgnoringBatteryOptimizations = pm.isIgnoringBatteryOptimizations(packageName);
+            if (!isIgnoringBatteryOptimizations) {
+                Intent intent = new Intent();
+                intent.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                intent.setData( Uri.parse("package:" + packageName) );
+                startActivityForResult(intent, 0);
             }
         }
     }
@@ -244,6 +262,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                             stopStartMenuItem.setTitle(R.string.stop_service);
                         }
                         doBindService();
+                        askBatteryOptimizationExclusion();
                         //moveTaskToBack(true);
                         //finish();
                     }
