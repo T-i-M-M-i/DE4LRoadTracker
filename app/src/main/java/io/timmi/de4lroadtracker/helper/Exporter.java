@@ -50,7 +50,7 @@ public class Exporter {
             String locationString = "[" + TextUtils.join(",", locations) + "]";
             String gpxData = io.timmi.de4lfilter.Exporter.exportToGpxMany(locationString);
             if (gpxData != null) {
-                File file = File.createTempFile("gpx", ".json", outDir);
+                File file = File.createTempFile("gpx", ".gpx", outDir);
                 FileOutputStream fOut = new FileOutputStream(file, true);
                 fOut.write(gpxData.getBytes());
                 fOut.close();
