@@ -36,10 +36,10 @@
 
 (defn -filter [locations:json sensors:json meta:json & [conf_orig]]
   (let [conf (parse+merge_conf conf_orig)
-        locatios:docs (parse locations:json :io.timmi.de4lfilter.parse/locations conf)
+        locations:docs (parse locations:json :io.timmi.de4lfilter.parse/locations conf)
         sensors:docs (parse sensors:json :io.timmi.de4lfilter.parse/sensors conf)
         meta:docs (parse meta:json)]
-       (filter* locatios:docs sensors:docs meta:docs conf)))
+       (filter* locations:docs sensors:docs meta:docs conf)))
 
 (defn -filterMany [locations:json sensors:json meta:json & [conf_orig]]
   (let [conf (parse+merge_conf conf_orig)
