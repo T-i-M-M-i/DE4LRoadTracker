@@ -6,6 +6,7 @@
 (s/def :location/timestamp string?)
 (s/def ::longitude number?)
 (s/def ::latitude number?)
+(s/def ::altitude number?)
 (s/def ::speed number?)
 (s/def ::coords (s/keys :req-un [::longitude ::latitude ::speed]))
 (s/def ::locations (s/coll-of (s/keys :req-un [:location/timestamp ::coords])))
@@ -32,6 +33,7 @@
 (defn transform_locations [orig]
   (let [coords (:coords orig)]
        {:location {:lon (:longitude coords)
-                   :lat (:latitude coords)}
+                   :lat (:latitude coords)
+                   :ele (:altitude coords)}
         :speed (:speed coords)
         :tmp {:timestamp (from-local-str (:timestamp orig))}}))
