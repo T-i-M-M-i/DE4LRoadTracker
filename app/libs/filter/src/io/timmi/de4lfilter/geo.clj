@@ -1,7 +1,6 @@
 (ns io.timmi.de4lfilter.geo)
 
-
-(defn distanceInKilometer
+(defn distance_in_km
   "Returns a rough estimate of the distance between two coordinate points, in kilometers. Works better with smaller distance"
   [{lat1 :lat lon1 :lon} {lat2 :lat lon2 :lon}]
   (let [deglen 110.25
