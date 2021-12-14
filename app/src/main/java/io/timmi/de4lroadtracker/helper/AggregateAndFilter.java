@@ -26,7 +26,7 @@ public class AggregateAndFilter {
 
     private static final String TAG = "AggregateAndFilter";
 
-    private static String readFileAsString(File file) {
+    public static String readFileAsString(File file) {
         StringBuilder lines = new StringBuilder();
         try {
             FileInputStream fileInputStream = new FileInputStream(file);
