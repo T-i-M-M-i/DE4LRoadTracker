@@ -1,6 +1,6 @@
 (ns io.timmi.de4lfilter.Filter-test
   (:require [clojure.test :refer [deftest testing is]]
-            [io.timmi.de4lfilter.Filter :refer [-filter -filterMany -distance]]
+            [io.timmi.de4lfilter.Filter :refer [-filter -filterMany]]
             [io.timmi.de4lfilter.Distance :refer [-distance]]
             [io.timmi.de4lfilter.parse :refer [parse]]
             [clojure.string :refer [join]]))
