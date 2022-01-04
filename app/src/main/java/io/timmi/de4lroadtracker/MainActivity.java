@@ -1,11 +1,8 @@
 package io.timmi.de4lroadtracker;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.ActivityManager;
-
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
-
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -13,36 +10,32 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
+import android.os.PowerManager;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-
-import com.google.android.material.textfield.TextInputEditText;
-
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import io.timmi.de4lroadtracker.activity.DebugActivity;
-import io.timmi.de4lroadtracker.helper.Md5Builder;
-import io.timmi.de4lroadtracker.helper.RawResourceLoader;
-import io.timmi.de4lroadtracker.helper.TSLocationWrapper;
-import io.timmi.de4lroadtracker.helper.TrackerIndicatorNotification;
-
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.smellycat.Durian;
+import com.google.android.material.textfield.TextInputEditText;
 
 import org.json.JSONArray;
 
@@ -50,6 +43,14 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+
+import io.timmi.de4lfilter.Filter;
+import io.timmi.de4lroadtracker.activity.DebugActivity;
+import io.timmi.de4lroadtracker.helper.Md5Builder;
+import io.timmi.de4lroadtracker.helper.Publisher;
+import io.timmi.de4lroadtracker.helper.RawResourceLoader;
+import io.timmi.de4lroadtracker.helper.TSLocationWrapper;
+import io.timmi.de4lroadtracker.helper.TrackerIndicatorNotification;
 
 public class MainActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
     private static final String TAG = "DE4LMainActivity";
@@ -59,9 +60,17 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     @Nullable
     private MenuItem stopStartMenuItem = null;
     private TSLocationWrapper locationService = null;
+    @Nullable
+    private MQTTConnection mqttConnection = null;
+
+    private MQTTConnection getMqttConnection() {
+        if (mqttConnection == null) {
+            mqttConnection = new MQTTConnection(getApplicationContext(), getApplicationContext());
+        }
+        return mqttConnection;
+    }
 
     public MainActivity() {
-        System.out.println(Durian.add(40, 2));
         //no instance
     }
 
@@ -114,11 +123,26 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     }
 
     private void askAndroid10Perm() {
-        if (Build.VERSION.SDK_INT >= 23) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             int result = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
             if (result != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this,
                         new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_CODE_OPEN_DOCUMENT_TREE);
+            }
+        }
+    }
+
+    @SuppressLint("BatteryLife")
+    private void askBatteryOptimizationExclusion() {
+        String packageName = getPackageName();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+            boolean isIgnoringBatteryOptimizations = pm.isIgnoringBatteryOptimizations(packageName);
+            if (!isIgnoringBatteryOptimizations) {
+                Intent intent = new Intent();
+                intent.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                intent.setData( Uri.parse("package:" + packageName) );
+                startActivityForResult(intent, 0);
             }
         }
     }
@@ -147,8 +171,22 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
     }
 
+
+    public void filterAndPublish(MenuItem item) {
+        filterAndPublish();
+    }
+
+    public void filterAndPublish() {
+        Publisher.filterAndPublish(getExternalFilesDir(null), getApplicationContext(), getMqttConnection());
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        String filterTest = Filter.filterMany("[[], []]", "[{}, {}]", "{}", "{}");
+        if(filterTest == null) {
+           Log.i(TAG, "filter returned null (success)");
+        }
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         settings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
@@ -161,6 +199,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         if (!privacyAgreementAccepted()) {
             startActivity(new Intent(this, PrivacyAgreementActivity.class));
         }
+        getMqttConnection();
     }
 
     @Override
@@ -211,12 +250,14 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                             stopStartMenuItem.setTitle(R.string.stop_service);
                         }
                         doBindService();
+                        askBatteryOptimizationExclusion();
                         //moveTaskToBack(true);
                         //finish();
                     }
                 });
             }
         });
+
     }
 
     public void stopTrackingService() {
@@ -238,6 +279,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         stopStartMenuItem.setIcon(R.drawable.baseline_not_started_black_48);
         stopStartMenuItem.setTitle(R.string.start_service);
         stopService(new Intent(getBaseContext(), SensorRecorder.class));
+        filterAndPublish();
     }
 
     @Override

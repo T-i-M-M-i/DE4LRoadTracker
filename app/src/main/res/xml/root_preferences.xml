@@ -27,6 +27,9 @@
     <PreferenceCategory app:title="@string/debug_header">
 
         <SwitchPreferenceCompat
+            app:key="keepDataOnDevice"
+            app:title="@string/keep_on_device" />
+        <SwitchPreferenceCompat
             app:key="sound"
             app:title="@string/debug_sound" />
         <EditTextPreference
@@ -38,6 +41,15 @@
             android:key="useMqttDebugTopic"
             android:title="publish to sensors/timmi/test" />
 
+    </PreferenceCategory>
+    <PreferenceCategory app:title="@string/privacy_settings">
+        <EditTextPreference
+            android:defaultValue="5"
+            android:inputType="number"
+            android:key="speedLimitKMH"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="@string/speed_limit_kmh" />
     </PreferenceCategory>
 
 </PreferenceScreen>

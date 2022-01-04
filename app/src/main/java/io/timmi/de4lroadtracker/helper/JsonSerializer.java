@@ -64,6 +64,27 @@ public class JsonSerializer {
         return sdf.format(date);
     }
 
+    public static JSONObject buildSensorInfoJSON(Sensor sensor) throws JSONException {
+        JSONObject sensorJSON = new JSONObject();
+
+        sensorJSON.put("vendor", sensor.getVendor());
+        sensorJSON.put("name", sensor.getName());
+        sensorJSON.put("type", sensor.getType());
+        sensorJSON.put("maximumRange", sensor.getMaximumRange());
+        sensorJSON.put("power", sensor.getPower());
+        sensorJSON.put("resolution", sensor.getResolution());
+        sensorJSON.put("version", sensor.getVersion());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            sensorJSON.put("id", sensor.getId());
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            sensorJSON.put("highestDirectReportRateLevel", sensor.getHighestDirectReportRateLevel());
+        }
+
+        return sensorJSON;
+
+    }
+
     public static JSONObject buildGeneralSensorJSON(AggregatedSensorValues sv) throws JSONException {
         Sensor sensor = sv.sensor;
 
@@ -134,7 +155,7 @@ public class JsonSerializer {
                 mObj.put("sensorId", sensor.getId());
             }*/
             mObj.put("value", new JSONArray(measurement.values));
-            mObj.put("timestamp", measurement.timestamp);
+            mObj.put("timestamp", AggregatedSensorData.eventTimeNanoToUnixTimeMS(measurement.timestamp, offsetInMS));
             measurementArray.put(mObj);
             res.put(measurement.key, measurementArray);
         }

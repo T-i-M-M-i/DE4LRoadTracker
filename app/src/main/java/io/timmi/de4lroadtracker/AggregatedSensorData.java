@@ -51,7 +51,7 @@ public class AggregatedSensorData {
         throw new IllegalStateException("The event.time seems to be upTime. In this case we cannot use a static offset to calculate the Unix timestamp of the event");
     }
 
-    static long eventTimeNanoToUnixTimeMS(final long eventTimeNanos,final long offsetInMS) {
+    public static long eventTimeNanoToUnixTimeMS(final long eventTimeNanos,final long offsetInMS) {
         return eventTimeNanos / 1_000_000L + offsetInMS;
     }
 

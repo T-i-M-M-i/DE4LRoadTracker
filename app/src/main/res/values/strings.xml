@@ -7,12 +7,14 @@
     <string name="menu_settings">Settings</string>
     <string name="menu_privacy">about Privacy</string>
     <string name="menu_debug">Debug</string>
+    <string name="menu_send">send data</string>
     <string name="title_activity_settings">Settings</string>
 
     <!-- Preference Titles -->
     <string name="messages_header">Message Broker</string>
     <string name="sync_header">Sync</string>
     <string name="debug_header">Debugging</string>
+    <string name="privacy_settings">Privacy Settings</string>
 
     <!-- Messages Broker Preferences -->
     <string name="mqtt_url">MQTT Server</string>
@@ -20,11 +22,14 @@
 
     <!-- Debug Settings -->
     <string name="debug_sound">play sound on location changes</string>
+    <string name="keep_on_device">keep cached data on device</string>
     <string name="location_service_url">Debug Location Server</string>
     <!-- Sync Preferences -->
     <string name="sync_title">Sync tracked data periodically</string>
     <string name="power_save">enable power save settings</string>
     <string name="title_activity_debug">Tracker Events</string>
+    <!-- Privacy Preferences -->
+    <string name="speed_limit_kmh">Tracking speed limit (km/h)</string>
     <!-- Strings used for fragments for navigation -->
     <string name="first_fragment_label">First Fragment</string>
     <string name="second_fragment_label">Second Fragment</string>
@@ -41,6 +46,7 @@
     <string name="distance">tracked length</string>
     <string name="waypoint">Waypoint</string>
     <string name="waypoints">Waypoints</string>
+    <string name="contribution">published Contribution</string>
     <string name="you_contributed">your contribution:</string>
     <string name="hello_first_fragment">Hello first fragment</string>
     <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
